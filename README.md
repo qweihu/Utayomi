@@ -58,7 +58,7 @@ utayomi 帮我处理下面这段歌词 ：
 
 输出内容
 
-<img src="screenshot/ex1.png" alt="alt text" width="50%">
+<img src="screenshot/example_01.png" alt="alt text" width="70%">
 
 [未命名歌曲-未知歌手.md](example/未命名歌曲-未知歌手.md)
 
@@ -75,13 +75,13 @@ https://www.uta-net.com/song/244127/
 
 输出内容
 
-<img src="screenshot/ex2.png" alt="alt text" width="50%">
+<img src="screenshot/example_02.png" alt="alt text" width="70%">
 
 [Lemon-米津玄師.md](example/Lemon-米津玄師.md)
 
 *注：此处同样可以添加参数使用罗马音，例如：“`utayomi 使用罗马音标注并处理这首歌：https://...`”*
 
-<img src="screenshot/ex3.png" alt="alt text" width="50%">
+<img src="screenshot/example_03.png" alt="alt text" width="70%">
 
 [Lemon-米津玄師-罗马音.md](example/Lemon-米津玄師-202604191823.md)
 
