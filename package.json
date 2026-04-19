@@ -1,6 +1,6 @@
 {
   "name": "utayomi",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "一个给日语歌词标注汉字读音和中文翻译的 skill，支持 URL 抓取和罗马音模式",
   "main": "SKILL.md",
   "files": [

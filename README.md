@@ -12,7 +12,7 @@
 
 `utayomi` 巧妙地将**本地 Python 注音脚本的准确性**与 **Agent 的翻译排版能力**结合在一起。只需一句话，Agent 就能帮你抓取歌词、精准注音、逐句翻译，并最终生成一份排版精美的 Markdown 歌词文档，直接保存在你的本地电脑上！
 
-输出示例：[example](output_example.md)
+输出示例：[输出示例](example)
 
 ## ✨ 核心特性
 
@@ -21,7 +21,7 @@
 - 🐙 **灵活输入**：支持直接输入歌词文本，或提供歌词网页 URL。
 - 🤖 **Agent 适配**：无缝挂载到 Claude Code、Codex 等 Agent 环境中长期使用。
 
-*目前原生测试支持的歌词站点：[歌ネット (Uta-Net)](https://www.uta-net.com/)* *↗️ 和* *[J-Lyric.net](https://j-lyric.net/)* *↗️（如果有其他常用的，欢迎提 PR 补充！）*
+*目前原生测试支持的歌词站点：<a href="https://www.uta-net.com/" target="_blank">歌ネット (Uta-Net)</a>* *↗️ 和* *<a href="https://j-lyric.net/" target="_blank">J-Lyric.net</a>* *↗️（如果有其他常用的，欢迎提 PR 补充！）*
 
 ## 💡 为什么不直接让大模型做？
 
@@ -57,7 +57,8 @@ utayomi 帮我处理下面这段歌词 ：
 ```
 
 输出内容
-![alt text](screenshot/ex1.png)
+<img src="screenshot/ex1.png" alt="alt text" width="50%">
+[未命名歌曲-未知歌手.md](example/未命名歌曲-未知歌手.md)
 
 *注：*
 1. 默认情况下，系统使用**假名**进行标注。如需使用**罗马音**标注，请在指令中添加相关参数，例如：“`utayomi 用罗马音处理下面这段歌词...`”。
@@ -71,11 +72,12 @@ https://www.uta-net.com/song/244127/
 ```
 
 输出内容
-![alt text](screenshot/ex2.png)
+<img src="screenshot/ex2.png" alt="alt text" width="50%">
+[Lemon-米津玄師.md](example/Lemon-米津玄師.md)
 
 *注：此处同样可以添加参数使用罗马音，例如：“`utayomi 使用罗马音标注并处理这首歌：https://...`”*
-![alt text](screenshot/ex3.png)
-
+<img src="screenshot/ex3.png" alt="alt text" width="50%">
+[Lemon-米津玄師-罗马音.md](example/Lemon-米津玄師-202604191823.md)
 
 ## 📦 安装指南
 

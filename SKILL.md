@@ -1,6 +1,6 @@
 ---
 name: utayomi
-version: 1.0.1
+version: 1.0.3
 description: 日语歌词注音工具。输入日语歌词文本，输出带<ruby>振假名标注的注音版本，支持平假名和罗马音两种模式。
 ---
 
