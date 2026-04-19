@@ -1,9 +1,9 @@
 <div align="center">
 
-# utayomi 
+# Utayomi 
 
 <p align="center">
-  <img src="screenshot/logo.svg" alt="utayomi Logo" height="40">
+  <img src="screenshot/logo.svg" alt="utayomi Logo" height="70">
 </p>
 
 <p align="center"><b>专为 Agent 打造的日语歌词处理 Skill</b></p>
