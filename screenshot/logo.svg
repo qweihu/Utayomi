@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="235px" height="235px" viewBox="0 0 235 235" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>logo</title>
+    <defs>
+        <linearGradient x1="50%" y1="77.1507994%" x2="50%" y2="6.16297582e-31%" id="linearGradient-1">
+            <stop stop-color="#EF7D5D" stop-opacity="0" offset="0%"></stop>
+            <stop stop-color="#EF7D5D" stop-opacity="0.4" offset="53.5272513%"></stop>
+            <stop stop-color="#EF7D5D" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="logo">
+            <path d="M231,117.5 C231,180.184319 180.184319,231 117.5,231 C54.8156809,231 4,180.184319 4,117.5 C4,54.8156809 54.8156809,4 117.5,4 C180.184319,4 231,54.8156809 231,117.5 Z" id="矩形" stroke="url(#linearGradient-1)" stroke-width="8"></path>
+            <text id="歌" font-family="PingFangSC-Regular, PingFang SC" font-size="105.843512" font-weight="normal" fill="#2F225A">
+                <tspan x="65" y="184">歌</tspan>
+            </text>
+            <text id="うた" font-family="PingFangSC-Semibold, PingFang SC" font-size="52.5" font-weight="500" fill="#EF7D5D">
+                <tspan x="65" y="74">うた</tspan>
+            </text>
+        </g>
+    </g>
+</svg>

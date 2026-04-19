@@ -1,10 +1,19 @@
-# utayomi (うたよみ) 🎵
+<div align="center">
 
-`utayomi` 是一个专为 Agent 打造的日语歌词处理 Skill。
+# utayomi 
+### 歌読み
 
-它巧妙地将**本地 Python 注音脚本的准确性**与 **Agent 的翻译排版能力**结合在一起。只需一句话，Agent 就能帮你抓取歌词、精准注音、逐句翻译，并最终生成一份排版精美的 Markdown 歌词文档，直接保存在你的本地电脑上！
+<p align="center">
+  <img src="screenshot/logo.svg" alt="utayomi Logo" height="40">
+</p>
 
-输出示例：[text](output_example.md)
+<p align="center"><b>专为 Agent 打造的日语歌词处理 Skill</b></p>
+
+</div>
+
+`utayomi` 巧妙地将**本地 Python 注音脚本的准确性**与 **Agent 的翻译排版能力**结合在一起。只需一句话，Agent 就能帮你抓取歌词、精准注音、逐句翻译，并最终生成一份排版精美的 Markdown 歌词文档，直接保存在你的本地电脑上！
+
+输出示例：[example](output_example.md)
 
 ## ✨ 核心特性
 
