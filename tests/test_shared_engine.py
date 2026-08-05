@@ -28,8 +28,8 @@ from utayomi_core import (  # noqa: E402
 
 
 @unittest.skipUnless(
-    CORE_SOURCE.is_dir() or importlib.util.find_spec("japanese_reading_core"),
-    "需要本地 japanese-language-core/src 或已安装 japanese_reading_core",
+    CORE_SOURCE.is_dir() or importlib.util.find_spec("japanese_language_core.reading"),
+    "需要本地 japanese-language-core/src 或已安装 japanese_language_core.reading",
 )
 class SharedEngineTests(unittest.TestCase):
     def test_auto_prefers_shared_engine_when_available(self):

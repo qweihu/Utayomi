@@ -98,10 +98,10 @@ def _render_shared_token(token, mode):
 
 def _convert_with_shared_engine(text, mode):
     try:
-        from japanese_reading_core import create_engine
+        from japanese_language_core.reading import create_engine
     except ImportError as exc:
         raise SharedEngineUnavailableError(
-            "未找到 japanese_reading_core；请安装 japanese-language-core 或设置 "
+            "未找到 japanese_language_core.reading；请安装 japanese-language-core 或设置 "
             "PYTHONPATH 指向其 src 目录"
         ) from exc
 
@@ -202,7 +202,7 @@ def _convert_to_ruby_legacy(text, mode='hiragana'):
 def convert_to_ruby_with_engine(text, mode='hiragana', engine='auto'):
     """Annotate with the shared engine when available.
 
-    ``auto`` prefers ``japanese_reading_core`` and falls back to the original
+    ``auto`` prefers ``japanese_language_core.reading`` and falls back to the original
     Fugashi/PyKakasi implementation for standalone legacy installations.
     ``shared`` is strict and is used by the cross-project contract tests.
     """
@@ -245,7 +245,7 @@ def main():
         '--engine',
         choices=('auto', 'shared', 'legacy'),
         default='auto',
-        help='读音引擎：auto 优先共享 japanese_reading_core，legacy 使用旧版 Fugashi/PyKakasi',
+        help='读音引擎：auto 优先共享 japanese_language_core.reading，legacy 使用旧版 Fugashi/PyKakasi',
     )
     
     args = parser.parse_args()
@@ -272,7 +272,7 @@ def main():
     
     if args.engine == 'auto' and selected_engine == 'legacy':
         print(
-            "Warning: japanese_reading_core 不可用，已回退 legacy；请安装 japanese-language-core 并使用 --engine shared。",
+            "Warning: japanese_language_core.reading 不可用，已回退 legacy；请安装 japanese-language-core 并使用 --engine shared。",
             file=sys.stderr,
         )
 
