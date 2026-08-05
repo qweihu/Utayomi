@@ -41,47 +41,10 @@ Markdown を保存します。
 `降り止む` は文字単位の推測ではなく文脈読みです。このサンプルは共有エンジンの
 契約テストに含まれています。
 
-## プレビュー
-
-GitHub の README は `<ruby>` を描画しないため、実際の出力を画像で示します。
-
 <p align="center">
   <img src="screenshot/ja/hiragana.png" alt="歌詞ふりがな" width="720">
   <br><sub>歌詞ふりがな：文脈読み、送り仮名は ruby の外</sub>
 </p>
-
-<p align="center">
-  <img src="screenshot/ja/clean.png" alt="HTML クリーニング" width="720">
-  <br><sub>HTML クリーニング：歌詞だけ残し、広告やノイズを除去</sub>
-</p>
-
-<p align="center">
-  <img src="screenshot/ja/romaji.png" alt="ローマ字歌詞" width="720">
-  <br><sub>ローマ字モード（--romaji）：すべての仮名をヘボン式で</sub>
-</p>
-
-<p align="center">
-  <img src="screenshot/ja/paired.png" alt="対訳レイアウト" width="720">
-  <br><sub>対訳レイアウト：日本語行＋中国語行＋グループ間の空行</sub>
-</p>
-
-<p align="center">
-  <img src="screenshot/ja/cards.png" alt="マイニングカード" width="720">
-  <br><sub>マイニングカード（build_cards）：歌詞行 → 読み/アクセント/頻度 → Anki</sub>
-</p>
-
-<p align="center">
-  <img src="screenshot/ja/cli.png" alt="CLI ワークフロー" width="720">
-  <br><sub>CLI：prepare → 注音 → 保存、確認後に書き出し</sub>
-</p>
-
-<p align="center">
-  <img src="screenshot/ja/flow.png" alt="ワークフロー" width="720">
-  <br><sub>歌詞入力 → HTML クリーニング → 共有注音 → 逐句翻訳 → 対訳レイアウト → 確認して保存</sub>
-</p>
-
-**中文版 / English 版**：同じ 7 枚が `screenshot/zh/` と `screenshot/en/` に
-あります。テンプレートは `scripts/screenshot/showcase.html`。
 
 ## アプローチ：証拠・再現・反証可能性
 
@@ -97,9 +60,15 @@ GitHub の README は `<ruby>` を描画しないため、実際の出力を画�
 
 ### 入力整理
 
-`prepare_lyrics.py` はユーザーが提供したテキストだけを扱います：HTML タグや
-`script`/`style` を除去し、エンティティをデコードし、曲名・歌手を認識し、
-繰り返し・括弧・ハーモニーマーカー・改行を保持します。URL から歌詞は取得しません。
+`prepare_lyrics.py` はユーザーが提供したテキストだけを扱います。
+HTML タグや `script`/`style` を除去し、エンティティをデコードし、曲名・歌手を
+認識し、繰り返し・括弧・ハーモニーマーカー・改行を保持します。URL からは
+歌詞を取得しません。
+
+<p align="center">
+  <img src="screenshot/ja/clean.png" alt="HTML クリーニング" width="720">
+  <br><sub>HTML クリーニング：歌詞だけ残し、広告やノイズを除去</sub>
+</p>
 
 ### 注音エンジン
 
@@ -127,6 +96,21 @@ assert "".join(token.orig for token in tokens) == "雨が降り止む"
 - **Agent 統合**：Codex スキル＋`PROMPT.md` フォールバック。
 - **ローカル優先**：歌詞を外部送信しない。
 
+<p align="center">
+  <img src="screenshot/ja/romaji.png" alt="ローマ字歌詞" width="720">
+  <br><sub>ローマ字モード（--romaji）：すべての仮名をヘボン式で</sub>
+</p>
+
+<p align="center">
+  <img src="screenshot/ja/paired.png" alt="対訳レイアウト" width="720">
+  <br><sub>対訳レイアウト：日本語行＋中国語行＋グループ間の空行</sub>
+</p>
+
+<p align="center">
+  <img src="screenshot/ja/cards.png" alt="マイニングカード" width="720">
+  <br><sub>マイニングカード（build_cards）：歌詞行 → 読み/アクセント/頻度 → Anki</sub>
+</p>
+
 ## 使い方
 
 ### Agent モード
@@ -143,6 +127,16 @@ cat final.md | .venv/bin/python scripts/save_markdown.py --output /absolute/path
 ```
 
 保存はユーザー確認済みの絶対パスのみ。`--create-parent` と `--overwrite` は明示指定。
+
+<p align="center">
+  <img src="screenshot/ja/cli.png" alt="CLI ワークフロー" width="720">
+  <br><sub>CLI：prepare → 注音 → 保存、確認後に書き出し</sub>
+</p>
+
+<p align="center">
+  <img src="screenshot/ja/flow.png" alt="ワークフロー" width="720">
+  <br><sub>歌詞入力 → HTML クリーニング → 共有注音 → 逐句翻訳 → 対訳レイアウト → 確認して保存</sub>
+</p>
 
 ## インストール
 
@@ -163,3 +157,36 @@ PYTHONPATH=/path/to/japanese-language-core/src /path/to/python \
 現状：19/19 テスト成功、スキル構造検証成功、共有契約は `降り止む`・送り仮名・
 legacy エスケープ・CLI 原文保持・`auto/shared/legacy` をカバー。共有境界の説明は
 japanese-language-core リポジトリのドキュメントにあります。
+
+## 現在の境界
+
+Utayomi は歌詞だけを扱います：クリーニング・注音・翻訳の対訳・レイアウト。
+URL から歌詞を取得せず、ユーザーテキストを送信せず、確認済みの絶対パスなしに
+ファイルを書き出しません。普通の学習テキストの注音は別の注音スキルが担当します。
+
+## 方法とデータソース
+
+- 読みの契約：`japanese-language-core`（Sudachi 優先、PyKakasi フォールバック）、
+  原文保持を不変条件に。
+- 辞書は証拠：Yomitan/JMdict/JMnedict/KANJIDIC を候補・監査入力として使い、
+  静かに上書きしない。
+- 審査済みルール：各フレーズ上書きに ID・理由・テスト。
+- サンプル：ゴールデンケースと共有契約テストを `tests/` に保持。
+
+## プロジェクト構成
+
+```text
+SKILL.md                  # スキル入口（リポジトリ＝スキル）
+PROMPT.md                 # スタンドアロンプロンプト
+README.md / README.zh-CN.md / README.ja.md
+scripts/prepare_lyrics.py # HTML クリーニングとメタデータ抽出
+scripts/utayomi_core.py   # 共有エンジン注音（--engine shared）
+scripts/build_cards.py    # マイニングカード（TSV / AnkiConnect payload）
+scripts/save_markdown.py  # 確認済みパス保存ヘルパー
+scripts/run_tests.py      # テストランナー
+tests/                    # ユニットと共有契約テスト
+```
+
+## ライセンス
+
+MIT。詳細は [LICENSE](LICENSE)。

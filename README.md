@@ -46,48 +46,10 @@ The shared engine and reviewed rules output:
 `降り止む` uses a contextual reading instead of per-character guesses. This
 sample is part of the shared engine's contract tests.
 
-## Preview
-
-GitHub's README does not render `<ruby>`; the images below show the real
-annotated output.
-
 <p align="center">
   <img src="screenshot/en/hiragana.png" alt="Lyric furigana" width="720">
   <br><sub>Lyric furigana: contextual readings, okurigana outside ruby</sub>
 </p>
-
-<p align="center">
-  <img src="screenshot/en/clean.png" alt="HTML cleaning" width="720">
-  <br><sub>HTML cleaning: keep lyrics, drop ads and page noise</sub>
-</p>
-
-<p align="center">
-  <img src="screenshot/en/romaji.png" alt="Romaji lyrics" width="720">
-  <br><sub>Romaji mode (--romaji): every kana rendered in Hepburn romaji</sub>
-</p>
-
-<p align="center">
-  <img src="screenshot/en/paired.png" alt="Paired translation layout" width="720">
-  <br><sub>Paired layout: Japanese line + Chinese line + blank line between groups</sub>
-</p>
-
-<p align="center">
-  <img src="screenshot/en/cards.png" alt="Mining cards" width="720">
-  <br><sub>Mining cards (build_cards): lyric line → reading/pitch/frequency → Anki</sub>
-</p>
-
-<p align="center">
-  <img src="screenshot/en/cli.png" alt="CLI workflow" width="720">
-  <br><sub>CLI workflow: prepare → annotate → save, writes only after confirmation</sub>
-</p>
-
-<p align="center">
-  <img src="screenshot/en/flow.png" alt="Workflow" width="720">
-  <br><sub>Workflow: lyrics input → HTML cleaning → shared annotation → line-by-line translation → paired layout → confirm & save</sub>
-</p>
-
-**中文版 / 日本語版**: the same seven images live in `screenshot/zh/` and
-`screenshot/ja/`; the generator template is `scripts/screenshot/showcase.html`.
 
 ## Engineering approach: evidence, reproduction, falsifiability
 
@@ -115,6 +77,11 @@ smart":
 - recognizes explicit song/artist metadata;
 - keeps repeated lines, brackets, harmony markers and original line breaks;
 - never fetches lyrics from a URL.
+
+<p align="center">
+  <img src="screenshot/en/clean.png" alt="HTML cleaning" width="720">
+  <br><sub>HTML cleaning: keep lyrics, drop ads and page noise</sub>
+</p>
 
 ### Annotation engine
 
@@ -144,6 +111,21 @@ Markdown layout are Utayomi's own product layer.
 - **Agent integration**: Codex skill workflow plus `PROMPT.md` fallback.
 - **Local-first**: lyrics never leave the machine; no automatic site access.
 
+<p align="center">
+  <img src="screenshot/en/romaji.png" alt="Romaji lyrics" width="720">
+  <br><sub>Romaji mode (--romaji): every kana rendered in Hepburn romaji</sub>
+</p>
+
+<p align="center">
+  <img src="screenshot/en/paired.png" alt="Paired translation layout" width="720">
+  <br><sub>Paired layout: Japanese line + Chinese line + blank line between groups</sub>
+</p>
+
+<p align="center">
+  <img src="screenshot/en/cards.png" alt="Mining cards" width="720">
+  <br><sub>Mining cards (build_cards): lyric line → reading/pitch/frequency → Anki</sub>
+</p>
+
 ## Usage
 
 ### Agent mode
@@ -162,6 +144,16 @@ cat final.md | .venv/bin/python scripts/save_markdown.py --output /absolute/path
 
 Save requires a user-confirmed absolute path; `--create-parent` and
 `--overwrite` are opt-in.
+
+<p align="center">
+  <img src="screenshot/en/cli.png" alt="CLI workflow" width="720">
+  <br><sub>CLI workflow: prepare → annotate → save, writes only after confirmation</sub>
+</p>
+
+<p align="center">
+  <img src="screenshot/en/flow.png" alt="Workflow" width="720">
+  <br><sub>Workflow: lyrics input → HTML cleaning → shared annotation → line-by-line translation → paired layout → confirm & save</sub>
+</p>
 
 ## Installation
 
@@ -184,3 +176,37 @@ Current results: 19/19 tests pass; skill structure validation passes; the
 shared-engine contract covers `降り止む`, repeated okurigana, legacy escaping,
 CLI source preservation and `auto/shared/legacy` modes. Shared-boundary notes
 live in the japanese-language-core repository documentation.
+
+## Current boundaries
+
+Utayomi handles lyrics only: cleaning, annotation, translation pairing and
+layout. It never fetches lyrics from URLs, never uploads user text, and never
+writes files without a confirmed absolute path. Ordinary learning-text
+annotation is handled by a separate annotation skill.
+
+## Methodology and data sources
+
+- Reading contract: `japanese-language-core` (Sudachi first, PyKakasi
+  fallback) with source preservation as an invariant.
+- Dictionary evidence: Yomitan/JMdict/JMnedict/KANJIDIC data as candidates and
+  audit input, never as a silent override.
+- Reviewed overrides: every phrase override has an ID, a reason and a test.
+- Samples: golden cases and cross-repo contract tests are kept in `tests/`.
+
+## Project structure
+
+```text
+SKILL.md                  # skill entry (the repository is the skill)
+PROMPT.md                 # standalone prompt
+README.md / README.zh-CN.md / README.ja.md
+scripts/prepare_lyrics.py # HTML cleaning and metadata extraction
+scripts/utayomi_core.py   # shared-engine annotation (--engine shared)
+scripts/build_cards.py    # lyric mining cards (TSV / AnkiConnect payload)
+scripts/save_markdown.py  # confirmed-path save helper
+scripts/run_tests.py      # test runner
+tests/                    # unit and shared-engine contract tests
+```
+
+## License
+
+MIT. See [LICENSE](LICENSE).

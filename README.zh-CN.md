@@ -63,32 +63,10 @@ Utayomi 不是让大模型凭感觉给歌词里的汉字猜读音，而是把歌
 
 这里的 `降り止む` 使用上下文读音，而不是把每个汉字交给一个孤立的逐字转换器。这个样本已经进入共享引擎的契约测试。
 
-## 效果预览
-
-GitHub 的 README 不渲染 `<ruby>` 标签，以下是真实歌词注音与排版效果的渲染图。
-
 <p align="center">
   <img src="screenshot/zh/hiragana.png" alt="歌词注音示例" width="720">
   <br><sub>歌词注音：共享引擎的上下文读音，送假名保持在 ruby 外</sub>
 </p>
-
-<p align="center">
-  <img src="screenshot/zh/paired.png" alt="中日对照排版示例" width="720">
-  <br><sub>中日对照排版：一行日文 + 一行中文 + 组间空行</sub>
-</p>
-
-<p align="center">
-  <img src="screenshot/zh/cli.png" alt="命令行工作流示例" width="720">
-  <br><sub>命令行工作流：prepare → annotate → save，用户确认后落盘</sub>
-</p>
-
-<p align="center">
-  <img src="screenshot/zh/flow.png" alt="工作流示例" width="720">
-  <br><sub>工作流：歌词输入 → HTML 清洗 → 共享注音 → 逐句翻译 → 对照排版 → 确认保存</sub>
-</p>
-
-**日本語版 / English 版**：同一套七张图在 `screenshot/ja/` 与 `screenshot/en/`，
-生成模板见 `scripts/screenshot/showcase.html`。
 
 ## 工程方法：证据、复现和可证伪
 
@@ -116,6 +94,11 @@ flowchart LR
     F --> G[中日对照 Markdown]
     G --> H[用户确认路径后保存]
 ```
+
+<p align="center">
+  <img src="screenshot/zh/flow.png" alt="工作流示例" width="720">
+  <br><sub>工作流：歌词输入 → HTML 清洗 → 共享注音 → 逐句翻译 → 对照排版 → 确认保存</sub>
+</p>
 
 ### 输入整理
 
@@ -163,6 +146,11 @@ assert "".join(token.orig for token in tokens) == "雨が降り止む"
 - **中日对照排版**：每句日文之后放置对应中文翻译。
 - **Agent 集成**：支持 Codex 等环境中的 Skill 工作流，也提供 `PROMPT.md` 作为降级方案。
 - **本地优先**：注音脚本不需要上传歌词，不自动访问歌词网站。
+
+<p align="center">
+  <img src="screenshot/zh/paired.png" alt="中日对照排版示例" width="720">
+  <br><sub>中日对照排版：一行日文 + 一行中文 + 组间空行</sub>
+</p>
 
 <p align="center">
   <img src="screenshot/zh/romaji.png" alt="歌词罗马音模式" width="720">
@@ -228,6 +216,11 @@ cat final.md | .venv/bin/python scripts/save_markdown.py \
 ```
 
 只有用户明确允许时，才追加 `--create-parent` 或 `--overwrite`。
+
+<p align="center">
+  <img src="screenshot/zh/cli.png" alt="命令行工作流示例" width="720">
+  <br><sub>命令行工作流：prepare → annotate → save，用户确认后落盘</sub>
+</p>
 
 ## 安装
 
