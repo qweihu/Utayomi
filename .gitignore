@@ -6,3 +6,5 @@
 *.zip
 __pycache__/
 *.py[cod]
+
+.playwright-cli/

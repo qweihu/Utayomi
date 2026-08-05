@@ -61,6 +61,33 @@ Utayomi 不是让大模型凭感觉给歌词里的汉字猜读音，而是把歌
 
 这里的 `降り止む` 使用上下文读音，而不是把每个汉字交给一个孤立的逐字转换器。这个样本已经进入 Bunomi 的标准答案和 Utayomi 的跨项目契约测试。
 
+## 效果预览
+
+GitHub 的 README 不渲染 `<ruby>` 标签，以下是真实歌词注音与排版效果的渲染图。
+
+<p align="center">
+  <img src="screenshot/zh/hiragana.png" alt="歌词注音示例" width="720">
+  <br><sub>歌词注音：共享引擎的上下文读音，送假名保持在 ruby 外</sub>
+</p>
+
+<p align="center">
+  <img src="screenshot/zh/paired.png" alt="中日对照排版示例" width="720">
+  <br><sub>中日对照排版：一行日文 + 一行中文 + 组间空行</sub>
+</p>
+
+<p align="center">
+  <img src="screenshot/zh/cli.png" alt="命令行工作流示例" width="720">
+  <br><sub>命令行工作流：prepare → annotate → save，用户确认后落盘</sub>
+</p>
+
+<p align="center">
+  <img src="screenshot/zh/flow.png" alt="工作流示例" width="720">
+  <br><sub>工作流：歌词输入 → HTML 清洗 → 共享注音 → 逐句翻译 → 对照排版 → 确认保存</sub>
+</p>
+
+**日本語版 / English 版**：同一套四张图在 `screenshot/ja/` 与 `screenshot/en/`，
+生成模板见 `scripts/screenshot/showcase.html`。
+
 ## 工程方法：证据、复现和可证伪
 
 Utayomi/Bunomi 采用的是一套工程化的语言处理方法，而不是把“模型看起来很聪明”当成质量证明：

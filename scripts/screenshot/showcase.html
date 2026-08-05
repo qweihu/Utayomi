@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Utayomi 效果预览</title>
+<style>
+  :root {
+    --ink: #1f2430; --muted: #6b7280; --accent: #e25563; --accent-2: #5b8def;
+    --green: #2fb38b; --card: #ffffff; --line: #e5e7ef;
+    --bg: linear-gradient(160deg, #f7f8fc 0%, #eef1f8 100%); --radius: 18px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); }
+  body {
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI",
+      "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    color: var(--ink); padding: 40px; -webkit-font-smoothing: antialiased;
+  }
+  .section {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 30px rgba(31, 36, 48, 0.08);
+    padding: 28px 32px; margin: 0 0 36px; max-width: 860px;
+  }
+  .section-title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 17px; font-weight: 700; letter-spacing: 0.02em; margin-bottom: 6px;
+  }
+  .section-title .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(226,85,99,0.15); }
+  .section-title .dot.blue { background: var(--accent-2); box-shadow: 0 0 0 4px rgba(91,141,239,0.15); }
+  .section-title .dot.green { background: var(--green); box-shadow: 0 0 0 4px rgba(47,179,139,0.15); }
+  .section-sub { color: var(--muted); font-size: 13px; margin: 0 0 18px 20px; }
+  ruby { ruby-align: center; }
+  rt { font-size: 0.55em; color: var(--accent); font-weight: 600; letter-spacing: 0.02em; }
+  .lyric { font-size: 26px; line-height: 2.5; font-weight: 600; letter-spacing: 0.03em; }
+  .lyric + .lyric { margin-top: 2px; }
+  .pair { border: 1px solid var(--line); border-radius: 14px; padding: 16px 20px; background: #fbfcff; }
+  .pair + .pair { margin-top: 14px; }
+  .pair .ja { font-size: 24px; font-weight: 600; line-height: 2.3; }
+  .pair .zh { font-size: 15px; color: var(--muted); margin-top: 2px; }
+  .terminal { background: #111827; border-radius: 14px; overflow: hidden; box-shadow: 0 12px 30px rgba(15,23,42,0.25); }
+  .terminal-bar { display: flex; align-items: center; gap: 7px; padding: 12px 16px; background: #1f2937; }
+  .terminal-bar i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .terminal-bar i:nth-child(1) { background: #f87171; }
+  .terminal-bar i:nth-child(2) { background: #fbbf24; }
+  .terminal-bar i:nth-child(3) { background: #34d399; }
+  .terminal-body {
+    padding: 18px 22px; font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    font-size: 13.5px; line-height: 1.9; color: #e5e7eb;
+  }
+  .terminal-body .prompt { color: #34d399; }
+  .terminal-body .cmd { color: #e5e7eb; }
+  .terminal-body .out { color: #fbbf24; white-space: pre-wrap; word-break: break-all; }
+  .render-label { margin: 18px 0 8px; font-size: 13px; color: var(--muted); font-weight: 600; }
+  .render-box {
+    background: #fbfcff; border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px 20px; font-size: 22px; font-weight: 600; line-height: 2.4;
+  }
+  .render-box rt { font-size: 0.55em; color: var(--accent); }
+  .flow { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
+  .step {
+    flex: 1; min-width: 118px; background: #f6f8fd; border: 1px solid var(--line);
+    border-radius: 14px; padding: 14px 12px; text-align: center;
+  }
+  .step .num {
+    width: 26px; height: 26px; margin: 0 auto 8px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step .num.alt { background: var(--accent-2); }
+  .step .name { font-size: 14px; font-weight: 700; }
+  .step .desc { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+  .flow-arrow { align-self: center; color: #c3c9d6; font-size: 20px; }
+</style>
+</head>
+<body>
+
+  <section class="section" id="demo-hiragana">
+    <div class="section-title"><span class="dot"></span><span data-i18n="hiragana-title">歌词注音</span></div>
+    <div class="section-sub" data-i18n="hiragana-sub">共享引擎：上下文读音，送假名在 ruby 外</div>
+    <p class="lyric"><ruby>夢<rt>ゆめ</rt></ruby>ならばどれほどよかったでしょう</p>
+    <p class="lyric"><ruby>未<rt>いま</rt></ruby>だにあなたのことを<ruby>夢<rt>ゆめ</rt></ruby>にみる</p>
+  </section>
+
+  <section class="section" id="demo-paired">
+    <div class="section-title"><span class="dot blue"></span><span data-i18n="paired-title">中日对照排版</span></div>
+    <div class="section-sub" data-i18n="paired-sub">一行日文 + 一行中文 + 组间空行</div>
+    <div class="pair">
+      <div class="ja"><ruby>夢<rt>ゆめ</rt></ruby>ならばどれほどよかったでしょう</div>
+      <div class="zh" data-i18n="pair-1">如果这是梦，那该有多好啊</div>
+    </div>
+    <div class="pair">
+      <div class="ja"><ruby>未<rt>いま</rt></ruby>だにあなたのことを<ruby>夢<rt>ゆめ</rt></ruby>にみる</div>
+      <div class="zh" data-i18n="pair-2">至今仍会在梦中见到你</div>
+    </div>
+  </section>
+
+  <section class="section" id="demo-cli">
+    <div class="section-title"><span class="dot green"></span><span data-i18n="cli-title">命令行工作流</span></div>
+    <div class="section-sub" data-i18n="cli-sub">prepare → annotate → save，用户确认后落盘</div>
+    <div class="terminal">
+      <div class="terminal-bar"><i></i><i></i><i></i></div>
+      <div class="terminal-body">
+        <div><span class="prompt">$</span> <span class="cmd">cat pasted-lyrics.html | python scripts/prepare_lyrics.py --json</span></div>
+        <div><span class="prompt">$</span> <span class="cmd">cat cleaned-lyrics.txt | python scripts/utayomi_core.py</span></div>
+        <div class="out">&lt;ruby&gt;夢&lt;rt&gt;ゆめ&lt;/rt&gt;&lt;/ruby&gt;ならばどれほどよかったでしょう</div>
+        <div><span class="prompt">$</span> <span class="cmd">cat final.md | python scripts/save_markdown.py --output /absolute/path.md</span></div>
+      </div>
+    </div>
+    <div class="render-label" data-i18n="cli-render">渲染效果</div>
+    <div class="render-box"><ruby>夢<rt>ゆめ</rt></ruby>ならばどれほどよかったでしょう</div>
+  </section>
+
+  <section class="section" id="demo-flow">
+    <div class="section-title"><span class="dot"></span><span data-i18n="flow-title">工作流</span></div>
+    <div class="section-sub" data-i18n="flow-sub">清洗 → 注音 → 翻译 → 排版 → 保存</div>
+    <div class="flow">
+      <div class="step"><div class="num">1</div><div class="name" data-i18n="flow-1">歌词输入</div><div class="desc" data-i18n="flow-1d">纯文本或粘贴 HTML</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="step"><div class="num alt">2</div><div class="name" data-i18n="flow-2">HTML 清洗</div><div class="desc" data-i18n="flow-2d">本地预处理</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="step"><div class="num">3</div><div class="name" data-i18n="flow-3">共享注音</div><div class="desc" data-i18n="flow-3d">japanese-language-core</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="step"><div class="num alt">4</div><div class="name" data-i18n="flow-4">逐句翻译</div><div class="desc" data-i18n="flow-4d">$japanese-translation</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="step"><div class="num">5</div><div class="name" data-i18n="flow-5">对照排版</div><div class="desc" data-i18n="flow-5d">日文行 + 中文行</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="step"><div class="num alt">6</div><div class="name" data-i18n="flow-6">确认保存</div><div class="desc" data-i18n="flow-6d">绝对路径确认后落盘</div></div>
+    </div>
+  </section>
+
+<script>
+  const I18N = {
+    zh: {
+      "hiragana-title": "歌词注音",
+      "hiragana-sub": "共享引擎：上下文读音，送假名在 ruby 外",
+      "paired-title": "中日对照排版",
+      "paired-sub": "一行日文 + 一行中文 + 组间空行",
+      "pair-1": "如果这是梦，那该有多好啊",
+      "pair-2": "至今仍会在梦中见到你",
+      "cli-title": "命令行工作流",
+      "cli-sub": "prepare → annotate → save，用户确认后落盘",
+      "cli-render": "渲染效果",
+      "flow-title": "工作流",
+      "flow-sub": "清洗 → 注音 → 翻译 → 排版 → 保存",
+      "flow-1": "歌词输入", "flow-1d": "纯文本或粘贴 HTML",
+      "flow-2": "HTML 清洗", "flow-2d": "本地预处理",
+      "flow-3": "共享注音", "flow-3d": "japanese-language-core",
+      "flow-4": "逐句翻译", "flow-4d": "$japanese-translation",
+      "flow-5": "对照排版", "flow-5d": "日文行 + 中文行",
+      "flow-6": "确认保存", "flow-6d": "绝对路径确认后落盘"
+    },
+    ja: {
+      "hiragana-title": "歌詞のふりがな",
+      "hiragana-sub": "共有エンジン：文脈読み、送り仮名は ruby の外",
+      "paired-title": "日中対訳レイアウト",
+      "paired-sub": "日本語行＋中国語行＋グループ間の空行",
+      "pair-1": "夢ならばどれほどよかったでしょう",
+      "pair-2": "今もあなたのことを夢に見る",
+      "cli-title": "コマンドラインの流れ",
+      "cli-sub": "prepare → 注音 → 保存、確認後に書き出し",
+      "cli-render": "レンダリング結果",
+      "flow-title": "ワークフロー",
+      "flow-sub": "クリーニング→注音→翻訳→レイアウト→保存",
+      "flow-1": "歌詞入力", "flow-1d": "テキストまたは HTML",
+      "flow-2": "HTML クリーニング", "flow-2d": "ローカル前処理",
+      "flow-3": "共有注音", "flow-3d": "japanese-language-core",
+      "flow-4": "逐句翻訳", "flow-4d": "$japanese-translation",
+      "flow-5": "対訳レイアウト", "flow-5d": "日本語行＋中国語行",
+      "flow-6": "確認して保存", "flow-6d": "絶対パス確認後に保存"
+    },
+    en: {
+      "hiragana-title": "Lyric furigana",
+      "hiragana-sub": "Shared engine: contextual readings, okurigana outside ruby",
+      "paired-title": "Paired translation layout",
+      "paired-sub": "Japanese line + Chinese line + blank line between groups",
+      "pair-1": "If this were a dream, how wonderful it would be",
+      "pair-2": "Even now I still see you in my dreams",
+      "cli-title": "CLI workflow",
+      "cli-sub": "prepare → annotate → save, writes only after confirmation",
+      "cli-render": "Rendered result",
+      "flow-title": "Workflow",
+      "flow-sub": "Clean → annotate → translate → layout → save",
+      "flow-1": "Lyrics input", "flow-1d": "plain text or pasted HTML",
+      "flow-2": "HTML cleaning", "flow-2d": "local preprocess",
+      "flow-3": "Shared annotation", "flow-3d": "japanese-language-core",
+      "flow-4": "Translate lines", "flow-4d": "$japanese-translation",
+      "flow-5": "Paired layout", "flow-5d": "JA line + ZH line",
+      "flow-6": "Confirm & save", "flow-6d": "absolute path, then save"
+    }
+  };
+  const lang = new URLSearchParams(location.search).get("lang") || "zh";
+  const dict = I18N[lang] || I18N.zh;
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = dict[el.dataset.i18n] || el.textContent;
+  });
+  document.documentElement.lang = lang === "ja" ? "ja" : lang === "en" ? "en" : "zh-CN";
+</script>
+</body>
+</html>
