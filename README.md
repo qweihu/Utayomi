@@ -1,5 +1,7 @@
 # Utayomi
 
+**[English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)**
+
 An Agent-facing **Japanese lyric annotation skill**: it cleans user-pasted
 lyrics locally, adds contextual `<ruby>` furigana (hiragana or romaji) with
 the shared engine, pairs each line with a Chinese translation, and saves the

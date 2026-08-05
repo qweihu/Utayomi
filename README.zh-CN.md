@@ -2,6 +2,8 @@
 
 # Utayomi
 
+**[English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)**
+
 <p align="center">
   <img src="screenshot/logo.svg" alt="Utayomi Logo" height="70">
 </p>
