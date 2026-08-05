@@ -16,9 +16,6 @@ import sys
 import re
 import argparse
 import html
-from types import SimpleNamespace
-import pykakasi
-import fugashi
 
 
 KANA_RUN_RE = re.compile(r"[ぁ-ゖァ-ヺヽヾー]+")
@@ -96,7 +93,7 @@ def _render_shared_token(token, mode):
     return _render_shared_hiragana(token)
 
 
-def _convert_with_shared_engine(text, mode):
+def _convert_with_shared_engine(text, mode, engine_name='auto'):
     try:
         from japanese_language_core.reading import create_engine
     except ImportError as exc:
@@ -106,7 +103,7 @@ def _convert_with_shared_engine(text, mode):
         ) from exc
 
     try:
-        engine = create_engine("auto")
+        engine = create_engine(engine_name)
     except Exception as exc:
         raise SharedEngineUnavailableError(f"共享日语读音引擎不可用: {exc}") from exc
     try:
@@ -128,95 +125,26 @@ def has_japanese(text):
     return bool(re.search(r'[\u4e00-\u9faf\u3040-\u309f\u30a0-\u30ff]', text))
 
 
-def _convert_to_ruby_legacy(text, mode='hiragana'):
-    """
-    将日文文本转换为带有 <ruby> 标签的格式
-    
-    Args:
-        text: 输入文本（应为已清洗的纯文本）
-        mode: 'hiragana' 或 'romaji'，默认为平假名
-    """
-    tagger = fugashi.Tagger()
-    kks = pykakasi.Kakasi()
-    
-    lines = text.split('\n')
-    result_lines = []
-    
-    for line in lines:
-        if not line.strip():
-            result_lines.append(_escape(line))
-            continue
-            
-        result_line = ""
-        for chunk in re.split(r"(\s+)", line):
-            if not chunk:
-                continue
-            if chunk.isspace():
-                result_line += _escape(chunk)
-                continue
-
-            words = tagger(chunk)
-            for word in words:
-                surface = word.surface
-            
-                if mode == 'romaji':
-                    # 罗马音模式：对包含日文的词汇进行罗马音转换
-                    if not has_japanese(surface):
-                        result_line += _escape(surface)
-                        continue
-                
-                    converted = kks.convert(surface)
-                    for item in converted:
-                        result_line += _render_shared_token(
-                            SimpleNamespace(
-                                orig=str(item.get('orig', '')),
-                                hira=str(item.get('hira', '')),
-                                hepburn=str(item.get('hepburn', '')),
-                            ),
-                            mode,
-                        )
-                else:
-                    # 平假名模式：仅对包含汉字的词汇进行转换
-                    if not has_kanji(surface):
-                        result_line += _escape(surface)
-                        continue
-                
-                    # 使用共享渲染器处理送假名、空白和 HTML 转义
-                    converted = kks.convert(surface)
-                
-                    for item in converted:
-                        result_line += _render_shared_token(
-                            SimpleNamespace(
-                                orig=str(item.get('orig', '')),
-                                hira=str(item.get('hira', '')),
-                                hepburn=str(item.get('hepburn', '')),
-                            ),
-                            mode,
-                        )
-                        
-        result_lines.append(result_line)
-        
-    return '\n'.join(result_lines)
-
-
 def convert_to_ruby_with_engine(text, mode='hiragana', engine='auto'):
     """Annotate with the shared engine when available.
 
     ``auto`` prefers ``japanese_language_core.reading`` and falls back to the original
-    Fugashi/PyKakasi implementation for standalone legacy installations.
+    PyKakasi engine inside the shared package.
     ``shared`` is strict and is used by the cross-project contract tests.
     """
 
     if engine not in {'auto', 'shared', 'legacy'}:
         raise ValueError("engine must be 'auto', 'shared', or 'legacy'")
     if engine == 'legacy':
-        return _convert_to_ruby_legacy(text, mode), 'legacy'
+        return _convert_with_shared_engine(text, mode, 'pykakasi')[0], 'legacy'
     try:
-        return _convert_with_shared_engine(text, mode)
+        return _convert_with_shared_engine(text, mode, 'auto')
     except SharedEngineUnavailableError:
         if engine == 'shared':
             raise
-        return _convert_to_ruby_legacy(text, mode), 'legacy'
+        raise SharedEngineUnavailableError(
+            "japanese_language_core.reading 不可用；请安装 japanese-language-core[reading]"
+        )
 
 
 def convert_to_ruby(text, mode='hiragana', engine='auto'):

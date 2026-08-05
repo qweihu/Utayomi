@@ -59,16 +59,15 @@ class SharedEngineTests(unittest.TestCase):
         result = convert_to_ruby("A < B 歌う & C", engine="legacy")
         self.assertEqual(result, "A &lt; B <ruby>歌<rt>うた</rt></ruby>う &amp; C")
 
-    def test_auto_reports_legacy_selection_to_callers(self):
+    def test_auto_requires_core_when_unavailable(self):
         with patch(
             "utayomi_core._convert_with_shared_engine",
             side_effect=SharedEngineUnavailableError("shared unavailable"),
         ):
-            result, selected_engine = convert_to_ruby_with_engine("歌う", engine="auto")
-        self.assertEqual(selected_engine, "legacy")
-        self.assertEqual(result, "<ruby>歌<rt>うた</rt></ruby>う")
+            with self.assertRaises(SharedEngineUnavailableError):
+                convert_to_ruby_with_engine("歌う", engine="auto")
 
-    def test_auto_cli_warns_when_shared_engine_falls_back(self):
+    def test_auto_cli_errors_when_core_unavailable(self):
         stdout = io.StringIO()
         stderr = io.StringIO()
         with patch(
@@ -77,9 +76,10 @@ class SharedEngineTests(unittest.TestCase):
         ), patch.object(sys, "argv", ["utayomi_core.py", "--engine", "auto"]), patch.object(
             sys, "stdin", io.StringIO("歌う")
         ), patch.object(sys, "stdout", stdout), patch.object(sys, "stderr", stderr):
-            main()
-        self.assertIn("回退 legacy", stderr.getvalue())
-        self.assertEqual(stdout.getvalue(), "<ruby>歌<rt>うた</rt></ruby>う")
+            with self.assertRaises(SystemExit) as exc:
+                main()
+        self.assertEqual(2, exc.exception.code)
+        self.assertIn("Error", stderr.getvalue())
 
     def test_cli_preserves_leading_and_trailing_line_structure(self):
         script = PROJECT_ROOT / "scripts" / "utayomi_core.py"
