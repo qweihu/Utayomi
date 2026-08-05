@@ -1,168 +1,299 @@
 <div align="center">
 
-# Utayomi 
+# Utayomi
 
 <p align="center">
-  <img src="screenshot/logo.svg" alt="utayomi Logo" height="70">
+  <img src="screenshot/logo.svg" alt="Utayomi Logo" height="70">
 </p>
 
-<p align="center"><b>专为 Agent 打造的日语歌词处理 Skill</b></p>
+<p align="center"><b>面向 Agent 的可审计日语歌词注音与翻译 Skill</b></p>
+
+<p align="center">把确定性的日语读音处理交给本地引擎，把清洗、翻译和排版交给 Agent。</p>
 
 </div>
 
-`utayomi` 巧妙地将**本地 Python 注音脚本的准确性**与 **Agent 的翻译排版能力**结合在一起。只需一句话，Agent 就能帮你抓取歌词、精准注音、逐句翻译，并最终生成一份排版精美的 Markdown 歌词文档，直接保存在你的本地电脑上！
-
-输出示例：[输出示例](example)
-
-## ✨ 核心特性
-
-- 🎯 **精准注音**：为日语歌词里的汉字自动补充 `<ruby>` 振假名，拒绝大模型猜测带来的多音字和送假名错误。
-- 🔤 **两种模式**：支持原生**平假名标注模式**，也支持**罗马音标注模式**。
-- 🐙 **灵活输入**：支持直接输入歌词文本，或提供歌词网页 URL。
-- 🤖 **Agent 适配**：无缝挂载到 Claude Code、Codex 等 Agent 环境中长期使用。
-
-*目前原生测试支持的歌词站点：<a href="https://www.uta-net.com/" target="_blank">歌ネット (Uta-Net)</a>* *↗️ 和* *<a href="https://j-lyric.net/" target="_blank">J-Lyric.net</a>* *↗️（如果有其他常用的，欢迎提 PR 补充！）*
-
-## 💡 为什么不直接让大模型做？
-
-大模型在翻译和排版方面表现出色，但在**日文汉字注音**上容易出现误差（如判断错多音字、送假名划分错误）。
-`utayomi` 的核心价值在于合理的分工：
-
-1. **Agent 负责基础工作**：抓取网页、清洗无关代码、逐句翻译成中文、整理 Markdown 格式并保存文件。
-2. **本地脚本负责专业注音**：基于可靠的词典库进行精准的日文汉字注音。
-
-最终，你得到的不仅是聊天窗口里的临时文字，而是一份可以直接使用 Obsidian、Typora 等工具打开的、排版精美的 `.md` 文件。
-
-## 🚀 产出效果预览
-
-生成出来的 `.md` 歌词文件不仅颜值高，而且信息全：
-
-- **加粗标题**：醒目的歌名与歌手信息。
-- **干净的排版**：日文歌词带 `<ruby>` 振假名或罗马音标注，下方紧跟一行信达雅的简体中文翻译。
-
-文件会自动以 `{歌名}-{歌手名}.md` 命名。如果碰到重名文件，还会贴心地加上时间戳（如 `Lemon-米津玄師-202604191530.md`），绝不覆盖你的老文件。
-
-## 🎮 使用方法
-
-安装完成后，你可以通过以下方式给 Agent 下达指令：
-
-### 方式 1：直接输入歌词
+Utayomi 不是让大模型凭感觉给歌词里的汉字猜读音，而是把歌词处理拆成可以检查的阶段：
 
 ```text
-utayomi 帮我处理下面这段歌词 ：
-いっせーのーせで踏み込むゴーライン
-僕らは何も何もまだ知らぬ
-一線越えて振り返るともうない
-僕らは何も何もまだ知らぬ
+用户提供的原文 → 本地清洗 → 日语词法与上下文读音 → Ruby 生成与回归检查 → Agent 翻译与排版 → 用户确认后保存
 ```
 
-输出内容
+最终可以得到适合 Obsidian、Typora、浏览器和 Agent 对话窗口使用的 Markdown/HTML 振假名内容。
 
-<img src="screenshot/example_01.png" alt="alt text" width="70%">
+输出示例见 [`example/`](./example)。
 
-[未命名歌曲-未知歌手.md](example/未命名歌曲-未知歌手.md)
+## 我们究竟在解决什么问题？
 
-*注：*
-1. 默认情况下，系统使用**假名**进行标注。如需使用**罗马音**标注，请在指令中添加相关参数，例如：“`utayomi 用罗马音处理下面这段歌词...`”。
-2. 如您输入的第一行信息为歌曲名与歌手信息，系统将以此作为生成的 Markdown 标题及文件名。
+日语歌词不是“把每个汉字查一个音”这么简单：
 
-### 方式 2：提供歌词链接
+- 日语没有用空格稳定分隔词语，首先需要词法分析。
+- 同一个汉字或词语会因为上下文、词性和活用而改变读音。
+- 送假名不能被粗暴地包进 Ruby，例如 `歌う` 应该呈现为 `<ruby>歌<rt>うた</rt></ruby>う`。
+- 歌词中的换行、重复副歌、括号、标点和页面复制噪音都需要分别处理。
+- 词典中的候选读音是证据，不应该在没有上下文判断的情况下静默覆盖主引擎结果。
+
+因此，Utayomi 的目标不是宣称“所有日语都 100% 正确”，而是让每一次处理都有明确的引擎、输入边界、校验规则和可复现的失败方式。
+
+## 细致性体现在哪里？
+
+| 层次 | 实现 | 为什么重要 |
+| --- | --- | --- |
+| 原文保真 | 所有 token 的 `orig` 拼接后必须等于输入 | 不吞掉换行、标点、空格或歌词字符 |
+| 上下文读音 | 默认使用公开的 `japanese-language-core`（reading 能力），优先 Sudachi，必要时回退 PyKakasi | 先按词和上下文判断，再生成读音 |
+| 送假名对齐 | 对日文片段中的假名运行进行对齐 | `踏み込む`、`歌う` 等不会简单整词包裹 |
+| 词典证据 | 可接入 Yomitan/JMdict/JMnedict/KANJIDIC 数据 | 提供候选读音、词性、标签和审计信息，但不盲目替换 |
+| 人工规则 | 每条覆盖规则有 ID、理由和测试样本 | 特殊短语可以被审阅、回归和撤销 |
+| 输出校验 | 共享契约、Bunomi 校验器和 Utayomi 回归测试共同检查原文与 Ruby 输出 | 发现错误时报告，而不是把测试未覆盖的情况伪装成确定结果 |
+| Agent 边界 | 本地清洗用户输入，不抓取外部歌词网页 | 降低网页噪音、来源不明和隐私泄露风险 |
+| 文件安全 | CLI 默认只输出，不随机写文件或覆盖已有文件 | 文件生成和路径确认留在明确的 Agent 工作流中 |
+
+## 一个实际例子
 
 ```text
-utayomi 帮我抓取并处理这首歌：
-https://www.uta-net.com/song/244127/
+输入：雨が降り止むまでは帰れない
 ```
 
-输出内容
+共享引擎和审核规则输出：
 
-<img src="screenshot/example_02.png" alt="alt text" width="70%">
+```html
+<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>り<ruby>止<rt>や</rt></ruby>むまでは<ruby>帰<rt>かえ</rt></ruby>れない
+```
 
-[Lemon-米津玄師.md](example/Lemon-米津玄師.md)
+这里的 `降り止む` 使用上下文读音，而不是把每个汉字交给一个孤立的逐字转换器。这个样本已经进入 Bunomi 的标准答案和 Utayomi 的跨项目契约测试。
 
-*注：此处同样可以添加参数使用罗马音，例如：“`utayomi 使用罗马音标注并处理这首歌：https://...`”*
+## 工程方法：证据、复现和可证伪
 
-<img src="screenshot/example_03.png" alt="alt text" width="70%">
+Utayomi/Bunomi 采用的是一套工程化的语言处理方法，而不是把“模型看起来很聪明”当成质量证明：
 
-[Lemon-米津玄師-罗马音.md](example/Lemon-米津玄師-202604191823.md)
+1. **上下文优先**：先进行词法分析，再从 token 生成读音；默认引擎是 Sudachi，上下文引擎不可用时才回退。
+2. **证据分层**：Yomitan 及其词典数据用于候选、释义和差异审计；最终输出由上下文引擎和经过审核的规则决定。
+3. **规则可审阅**：特殊读音不写成隐藏的模型提示，而是以有 ID、有理由、有测试的覆盖规则存在。
+4. **不变量校验**：输入和输出之间保持原文可追溯关系；Ruby 不平衡或汉字遗漏时报告失败。
+5. **标准答案回归**：人名、地名、多音字、活用、歌词式样本和长文本都进入可重复测试，而不是只测试一个漂亮示例。
+6. **差异不被隐藏**：主引擎和词典候选不一致时进入报告。例如 `愛し` 的古语候选 `はし` 目前仍保留为人工复核项，没有被自动写入覆盖规则。
+7. **版本可追踪**：Yomitan 快照保存 release 标识和 SHA-256；共享引擎有独立 distribution 元数据，两个应用使用同一份源代码。
 
-## 📦 安装指南
+该方法受到日语形态素解析和机器可读词典工作的启发，但本项目的测试结果属于项目级工程证据，不等同于学术论文中的独立基准评测，也不宣称所有文本都能得到完美读音。
 
-### 🤖 自动安装
+## 工作流
 
-将以下提示词发送给你的 Agent，让它自动完成安装：
+```mermaid
+flowchart LR
+    A[用户粘贴歌词] --> B[本地清洗 HTML 与噪音]
+    B --> C[识别歌名/歌手/正文]
+    C --> D[japanese_language_core.reading]
+    D --> E[送假名对齐与回归检查]
+    E --> F[Agent 逐句翻译]
+    F --> G[中日对照 Markdown]
+    G --> H[用户确认路径后保存]
+```
+
+### 输入整理
+
+`prepare_lyrics.py` 只处理用户已经提供的文本：
+
+- 删除 HTML 标签、`script`、`style` 等结构噪音。
+- 解码 HTML 实体。
+- 识别明确的歌曲名和歌手信息。
+- 保留重复句、括号、和声标记和原始歌词换行。
+- 不根据 URL 自动抓取歌词，也不把外部网页当作数据来源。
+
+### 注音引擎
+
+Utayomi 通过独立的 `japanese-language-core` 包消费最小化的 `ReadingToken` 契约：
+
+```python
+from japanese_language_core.reading import create_engine
+
+engine = create_engine("auto")
+tokens = tuple(engine.tokens("雨が降り止む"))
+assert "".join(token.orig for token in tokens) == "雨が降り止む"
+```
+
+引擎模式：
+
+- `auto`：优先 Sudachi，上下文引擎不可用时回退 PyKakasi。
+- `shared`：严格要求共享引擎，适合 CI 和生产检查。
+- `legacy`：强制使用原有 Fugashi/PyKakasi 路径，用于兼容旧环境。
+
+歌词翻译、标题识别和 Markdown 排版仍由 Utayomi 负责，不和 Bunomi 的普通学习文本工作流混在一起。
+
+## 核心特性
+
+- **平假名注音**：`<ruby>漢字<rt>かんじ</rt></ruby>`。
+- **罗马音模式**：使用 `--romaji` 输出 Hepburn 罗马音。
+- **上下文读音**：消费独立 `japanese-language-core` 的 Sudachi 优先共享引擎。
+- **送假名处理**：尽量将汉字部分和假名部分分开标注。
+- **HTML 清洗**：处理用户粘贴的纯文本或混杂 HTML 的内容。
+- **中日对照排版**：每句日文之后放置对应中文翻译。
+- **Agent 集成**：支持 Codex 等环境中的 Skill 工作流，也提供 `PROMPT.md` 作为降级方案。
+- **本地优先**：注音脚本不需要上传歌词，不自动访问歌词网站。
+
+## 使用方法
+
+### Agent 模式
+
+安装并激活 Skill 后，可以这样使用：
 
 ```text
-请学习并访问 https://github.com/qweihu/Utayomi ，进行安装并激活为本地 skill，名称为 utayomi。如已安装并激活完成，请呈现一句接下来如何使用的引导说明文案。
+utayomi 帮我处理下面这段歌词：
+星空
+示例歌手
+静かな夜に星を見上げる
 ```
 
-### 🛠️ 手动安装
+建议的输入结构是：第 1 行歌曲名，第 2 行歌手名，第 3 行开始为歌词正文。信息不足时，Skill 不会擅自补全歌名或歌手。
 
-1. 从 [Releases 页面](https://github.com/qweihu/Utayomi/releases) 下载最新的 release 压缩包。
-2. 将 release 包完整解压到你的 Agent 的 skill 目录下（注意：不要仅仅拷贝 `SKILL.md`，该 skill 依赖于目录中的其他脚本和文件）。
-3. 在解压目录中安装运行依赖：
+如果输入中包含 HTML：
+
+```text
+utayomi 请清理下面这段用户粘贴的 HTML，只保留歌词并完成注音和翻译：
+<article>
+  <h1>歌曲名：星空</h1>
+  <p>歌手：示例歌手</p>
+  <p>静かな夜に<br>星を見上げる</p>
+</article>
+```
+
+### CLI 模式
+
+推荐使用已经安装共享依赖的虚拟环境；不要默认使用没有依赖的裸 `python3`：
 
 ```bash
-python3 -m pip install -r requirements.txt
-```
-
-4. 将解压后的 `SKILL.md` 注册并激活为本地 skill。
-
-## 🌐 非 Agent 用户怎么办？
-
-如果你不使用 Claude Code、Codex 等 Agent 环境，而是使用**网页端 LLM 工具**，或者像 **CherryStudio** 这样的本地客户端工具，同样可以使用本工具的降级方案：
-
-1. 打开项目里的 [`PROMPT.md`](./PROMPT.md) 文件。
-2. 把里面的提示词内容完整复制给大语言模型。
-3. 然后再把需要处理的歌词正文或网页源码贴给它。
-
-*注：这只是 Fallback 方案。要想获得最稳定、最准确的注音体验，依然推荐配置本地 Python 脚本环境。*
-
-## 💻 CLI 命令行用法
-
-脱离 Agent，核心脚本依然是个能打的命令行工具：
-
-```bash
-# 平假名模式
-echo "夢ならばどれほどよかったでしょう" | python3 scripts/utayomi_core.py
+# 两个仓库位于同一个本地工作区时
+printf '%s\n' '夢ならばどれほどよかったでしょう' | \
+  PYTHONPATH=/path/to/japanese-language-core/src /path/to/python \
+  scripts/utayomi_core.py --engine shared
 
 # 罗马音模式
-echo "夢ならばどれほどよかったでしょう" | python3 scripts/utayomi_core.py --romaji
+printf '%s\n' '夢ならばどれほどよかったでしょう' | \
+  PYTHONPATH=/path/to/japanese-language-core/src /path/to/python \
+  scripts/utayomi_core.py --engine shared --romaji
 
-# 从本地文件读取
-python3 scripts/utayomi_core.py < lyrics.txt
+# 清洗用户粘贴的 HTML，并查看结构化结果
+cat pasted-lyrics.txt | .venv/bin/python scripts/prepare_lyrics.py --json
 ```
 
-*(注：CLI 仅负责输出注音结果，不包含翻译、排版和保存文件功能。这些属于 Agent 工作流。)*
+CLI 只负责清洗或注音并输出结果，不负责翻译，也不在随机目录写文件。保存 Markdown 文件属于 Agent 工作流，
+必须先得到用户确认的完整绝对路径，再使用安全保存脚本：
 
-## 📂 开发者与仓库说明
+```bash
+cat final.md | .venv/bin/python scripts/save_markdown.py \
+  --output /absolute/path/confirmed-lyrics.md
+```
 
-### 仓库结构与文件说明
+只有用户明确允许时，才追加 `--create-parent` 或 `--overwrite`。
+
+## 安装
+
+### 推荐：使用独立共享引擎
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m pip install -r requirements.txt
+```
+
+安装完成后，如果共享包已经进入当前虚拟环境，可以省略 `PYTHONPATH`；本地联调时也可以执行
+`.venv/bin/python -m pip install -e /path/to/japanese-language-core`。
+
+### 兼容旧版环境
+
+如果暂时没有共享引擎，可以先安装 `requirements.txt`，再显式使用：
+
+```bash
+printf '%s\n' '夢ならばどれほどよかったでしょう' | \
+  .venv/bin/python scripts/utayomi_core.py --engine legacy
+```
+
+旧版模式只用于兼容和对比；新项目建议使用 `auto` 或严格的 `shared`。
+
+### 安装为 Codex Skill
+
+Release 包必须包含完整目录，而不是只复制 `SKILL.md`，因为 Skill 依赖其中的本地脚本和资源：
+
+```text
+将完整的 Utayomi 项目安装到你的 Codex Skill 目录，并激活其中的 SKILL.md。
+```
+
+安装后新建会话进行触发测试。Bunomi 与 Utayomi 的触发边界记录在 Bunomi 项目的 `docs/codex-skill-trigger-test.md`。
+
+也可以把下面的提示发送给 Agent，请它根据当前环境完成安装；安装后仍应检查完整 Skill 目录和本地 Python 依赖：
+
+```text
+请学习并访问 https://github.com/qweihu/Utayomi ，将完整项目安装并激活为本地 Skill，名称为 utayomi。
+安装完成后，请告诉我 Skill 的完整路径以及下一步使用示例。
+```
+
+## 可重复验证
+
+当前本地验证结果：
+
+- Utayomi 测试：19/19 通过。
+- Bunomi 生产审计：30/30 通过。
+- Bunomi 与 Utayomi Skill 结构校验：通过。
+- 真实 Codex 新会话：Bunomi 自然语言、`$bunomi`、非注音负向和 Utayomi 歌词边界均已验证。
+- 共享引擎契约：覆盖 `降り止む`、重复送假名、legacy 转义、CLI 原文保留和 `auto/shared/legacy` 边界。
+
+运行 Utayomi 测试：
+
+```bash
+PYTHONPATH=/path/to/japanese-language-core/src /path/to/python \
+  -m unittest discover -s tests -v
+```
+
+生产审计和触发记录见：
+
+- Bunomi 项目的 `docs/production-audit.md`
+- Bunomi 项目的 `docs/codex-skill-trigger-test.md`
+- Bunomi 项目的 `docs/shared-reading-engine.md`
+
+## 当前边界
+
+Utayomi 当前有意不做以下事情：
+
+- 不自动抓取歌词网站或根据 URL 猜测歌词来源。
+- 不把 Agent 的翻译结果伪装成词典或语言学标注结果。
+- 不在没有上下文证据时自动写入有争议的读音覆盖规则。
+- 不承诺所有人名、古语、歌词化表达和方言读音都能一次正确处理。
+- 不把本地生产审计描述为 OpenAI 官方认证或学术基准评测。
+
+遇到不确定读音时，正确做法是保留证据、输出差异并补充经过审核的测试样本，而不是隐藏不确定性。
+
+## 方法依据与数据来源
+
+本项目的技术路线参考了以下一手资料：
+
+- [Sudachi: a Japanese Tokenizer for Business](https://aclanthology.org/L18-1355/)：日语词法分析和多粒度分词的基础参考。
+- [JMdict Project](https://www.jmdict.org/jmdict/j_jmdict.html)：以日语为枢纽的多语言机器可读词典。
+- [EDRDG 项目说明](https://www.jmdict.org/)：JMdict、JMnedict 和 KANJIDIC 系列数据的维护与许可信息。
+- [KANJIDIC Documentation](https://kanjixml.sourceforge.net/kanjidic_doc.html)：单字读音、意义和属性信息的格式参考。
+
+这些资料支持“词法分析、词典证据、人工审核和可复现验证”的工程分层；它们不是本项目准确率的背书。项目自身的质量判断仍然依赖版本化数据、标准答案、失败报告和回归测试。
+
+## 项目结构
 
 ```text
 utayomi/
 ├── scripts/
-│   └── utayomi_core.py    # 本地注音核心，只负责把输入文本转成带注音的结果
-├── screenshot/            # README 配图目录
-├── SKILL.md               # 给 Agent 读的工作流说明（抓歌词、调用脚本、排版并保存）
-├── PROMPT.md              # 没有本地 skill / Python 环境时的网页端 fallback 提示词
-├── requirements.txt       # 本地运行需要的 Python 依赖
+│   ├── prepare_lyrics.py  # 本地清洗 HTML、提取歌名和歌手
+│   ├── save_markdown.py   # 用户确认路径后的安全保存
+│   ├── run_tests.py       # 选择可用虚拟环境运行 Python 测试
+│   └── utayomi_core.py    # 注音 CLI，共享引擎适配和 Ruby 输出
+├── tests/
+│   ├── test_prepare_lyrics.py
+│   ├── test_export.py
+│   └── test_shared_engine.py
+├── screenshot/            # README 配图
+├── example/               # 输出示例
+├── SKILL.md               # Agent 工作流说明
+├── PROMPT.md              # 无本地 Skill 时的降级提示词
+├── requirements.txt       # 旧版兼容依赖
 ├── package.json
 ├── LICENSE
 └── README.md
 ```
 
-### Release 包应该包含什么
-
-为了保证 skill 能真正运行，release 包里至少要包含这些文件：
-
-- `SKILL.md`
-- `scripts/utayomi_core.py`
-- `requirements.txt`
-- `PROMPT.md`
-- `README.md`
-- `LICENSE`
-- `package.json`
-
-## 📜 License
+## License
 
 MIT

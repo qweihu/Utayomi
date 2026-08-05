@@ -1,19 +1,19 @@
 {
   "name": "utayomi",
-  "version": "1.0.3",
-  "description": "一个给日语歌词标注汉字读音和中文翻译的 skill，支持 URL 抓取和罗马音模式",
+  "version": "1.1.0",
+  "description": "一个给用户提供的日语歌词标注汉字读音和中文翻译的 skill，支持 HTML 清洗和罗马音模式",
   "main": "SKILL.md",
   "files": [
     "SKILL.md",
     "PROMPT.md",
     "README.md",
-    "scripts",
+    "scripts/*.py",
     "requirements.txt",
     "LICENSE",
     "package.json"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "python3 scripts/run_tests.py"
   },
   "repository": {
     "type": "git",
