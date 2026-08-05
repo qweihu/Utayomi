@@ -125,6 +125,11 @@ flowchart LR
 - 保留重复句、括号、和声标记和原始歌词换行。
 - 不根据 URL 自动抓取歌词，也不把外部网页当作数据来源。
 
+<p align="center">
+  <img src="screenshot/zh/clean.png" alt="HTML 清洗前后" width="720">
+  <br><sub>清洗前后：只保留歌词，删除广告与页面噪音</sub>
+</p>
+
 ### 注音引擎
 
 Utayomi 通过独立的 `japanese-language-core` 包消费最小化的 `ReadingToken` 契约：
@@ -143,7 +148,8 @@ assert "".join(token.orig for token in tokens) == "雨が降り止む"
 - `shared`：严格要求共享引擎，适合 CI 和生产检查。
 - `legacy`：强制使用原有 Fugashi/PyKakasi 路径，用于兼容旧环境。
 
-歌词翻译、标题识别和 Markdown 排版仍由 Utayomi 负责，不和 Bunomi 的普通学习文本工作流混在一起。
+歌词翻译、标题识别和 Markdown 排版由 Utayomi 自己负责，普通学习文本的注音
+工作流与之分离。
 
 ## 核心特性
 
@@ -155,6 +161,16 @@ assert "".join(token.orig for token in tokens) == "雨が降り止む"
 - **中日对照排版**：每句日文之后放置对应中文翻译。
 - **Agent 集成**：支持 Codex 等环境中的 Skill 工作流，也提供 `PROMPT.md` 作为降级方案。
 - **本地优先**：注音脚本不需要上传歌词，不自动访问歌词网站。
+
+<p align="center">
+  <img src="screenshot/zh/romaji.png" alt="歌词罗马音模式" width="720">
+  <br><sub>罗马音模式（--romaji）：所有假名输出 Hepburn 罗马音</sub>
+</p>
+
+<p align="center">
+  <img src="screenshot/zh/cards.png" alt="挖句卡片" width="720">
+  <br><sub>挖句卡片（build_cards）：歌词行 → 读音/声调/频率 → Anki</sub>
+</p>
 
 ## 使用方法
 

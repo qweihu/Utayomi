@@ -34,6 +34,7 @@
   rt { font-size: 0.55em; color: var(--accent); font-weight: 600; letter-spacing: 0.02em; }
   .lyric { font-size: 26px; line-height: 2.5; font-weight: 600; letter-spacing: 0.03em; }
   .lyric + .lyric { margin-top: 2px; }
+  .romaji rt { color: var(--accent-2); }
   .pair { border: 1px solid var(--line); border-radius: 14px; padding: 16px 20px; background: #fbfcff; }
   .pair + .pair { margin-top: 14px; }
   .pair .ja { font-size: 24px; font-weight: 600; line-height: 2.3; }
@@ -71,6 +72,23 @@
   .step .name { font-size: 14px; font-weight: 700; }
   .step .desc { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
   .flow-arrow { align-self: center; color: #c3c9d6; font-size: 20px; }
+  .rows { display: flex; flex-direction: column; gap: 10px; }
+  .row {
+    display: flex; align-items: center; gap: 14px; background: #fbfcff;
+    border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px;
+  }
+  .row .in { font-size: 18px; font-weight: 600; flex: 1; }
+  .row .arrow { color: #c3c9d6; }
+  .row .out { font-size: 15px; color: var(--ink); flex: 1.2; }
+  .row .note { font-size: 12px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .panel { background: #f6f8fd; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .panel .panel-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--muted); }
+  .panel .messy { font-size: 13px; color: #b45309; line-height: 1.7; word-break: break-all; }
+  .panel .clean { font-size: 20px; font-weight: 700; line-height: 2.2; }
+  .card-mini { background: #fbfcff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; }
+  .card-mini .line1 { font-size: 19px; font-weight: 700; }
+  .card-mini .line2 { font-size: 14px; color: var(--muted); margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -80,6 +98,27 @@
     <div class="section-sub" data-i18n="hiragana-sub">共享引擎：上下文读音，送假名在 ruby 外</div>
     <p class="lyric"><ruby>夢<rt>ゆめ</rt></ruby>ならばどれほどよかったでしょう</p>
     <p class="lyric"><ruby>未<rt>いま</rt></ruby>だにあなたのことを<ruby>夢<rt>ゆめ</rt></ruby>にみる</p>
+  </section>
+
+  <section class="section" id="demo-clean">
+    <div class="section-title"><span class="dot"></span><span data-i18n="clean-title">HTML 清洗前后</span></div>
+    <div class="section-sub" data-i18n="clean-sub">本地预处理：只保留歌词，删除广告与页面噪音</div>
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-title" data-i18n="clean-before">清洗前（粘贴的 HTML）</div>
+        <div class="messy">&lt;div class="ad"&gt;広告&lt;/div&gt;<br>&lt;p&gt;夢ならば…&lt;/p&gt;<br>&lt;button&gt;Subscribe&lt;/button&gt;</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title" data-i18n="clean-after">清洗后（歌词）</div>
+        <div class="clean"><ruby>夢<rt>ゆめ</rt></ruby>ならばどれほどよかったでしょう</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="demo-romaji">
+    <div class="section-title"><span class="dot blue"></span><span data-i18n="romaji-title">歌词罗马音（--romaji）</span></div>
+    <div class="section-sub" data-i18n="romaji-sub">所有假名输出 Hepburn 罗马音</div>
+    <p class="lyric romaji"><ruby>夢<rt>yume</rt></ruby><ruby>なら<rt>nara</rt></ruby><ruby>ば<rt>ba</rt></ruby><ruby>どれ<rt>dore</rt></ruby><ruby>ほど<rt>hodo</rt></ruby><ruby>よかっ<rt>yokatsu</rt></ruby><ruby>た<rt>ta</rt></ruby><ruby>でしょう<rt>deshou</rt></ruby></p>
   </section>
 
   <section class="section" id="demo-paired">
@@ -92,6 +131,22 @@
     <div class="pair">
       <div class="ja"><ruby>未<rt>いま</rt></ruby>だにあなたのことを<ruby>夢<rt>ゆめ</rt></ruby>にみる</div>
       <div class="zh" data-i18n="pair-2">至今仍会在梦中见到你</div>
+    </div>
+  </section>
+
+  <section class="section" id="demo-cards">
+    <div class="section-title"><span class="dot green"></span><span data-i18n="cards-title">挖句卡片（build_cards）</span></div>
+    <div class="section-sub" data-i18n="cards-sub">歌词行 → 读音/声调/频率 → Anki TSV / payload</div>
+    <div class="rows">
+      <div class="row">
+        <span class="in"><ruby>夢<rt>ゆめ</rt></ruby>ならばどれほどよかったでしょう</span>
+        <span class="arrow">→</span>
+        <span class="out" data-i18n="cards-example">如果这是梦，那该有多好啊 <span class="note">[lyrics]</span></span>
+      </div>
+    </div>
+    <div class="card-mini" style="margin-top:12px;">
+      <div class="line1">夢 · ゆめ <span class="note">頭高</span></div>
+      <div class="line2" data-i18n="cards-meta">Expression / Reading / Pitch / Frequency / Tags → AnkiConnect</div>
     </div>
   </section>
 
@@ -134,6 +189,16 @@
     zh: {
       "hiragana-title": "歌词注音",
       "hiragana-sub": "共享引擎：上下文读音，送假名在 ruby 外",
+      "clean-title": "HTML 清洗前后",
+      "clean-sub": "本地预处理：只保留歌词，删除广告与页面噪音",
+      "clean-before": "清洗前（粘贴的 HTML）",
+      "clean-after": "清洗后（歌词）",
+      "romaji-title": "歌词罗马音（--romaji）",
+      "romaji-sub": "所有假名输出 Hepburn 罗马音",
+      "cards-title": "挖句卡片（build_cards）",
+      "cards-sub": "歌词行 → 读音/声调/频率 → Anki TSV / payload",
+      "cards-example": "如果这是梦，那该有多好啊",
+      "cards-meta": "Expression / Reading / Pitch / Frequency / Tags → AnkiConnect",
       "paired-title": "中日对照排版",
       "paired-sub": "一行日文 + 一行中文 + 组间空行",
       "pair-1": "如果这是梦，那该有多好啊",
@@ -153,6 +218,16 @@
     ja: {
       "hiragana-title": "歌詞のふりがな",
       "hiragana-sub": "共有エンジン：文脈読み、送り仮名は ruby の外",
+      "clean-title": "HTML クリーニング前後",
+      "clean-sub": "ローカル前処理：歌詞だけ残し、広告やノイズを除去",
+      "clean-before": "前（貼り付け HTML）",
+      "clean-after": "後（歌詞）",
+      "romaji-title": "歌詞ローマ字（--romaji）",
+      "romaji-sub": "すべての仮名をヘボン式ローマ字で",
+      "cards-title": "マイニングカード（build_cards）",
+      "cards-sub": "歌詞行 → 読み/アクセント/頻度 → Anki TSV / payload",
+      "cards-example": "夢ならばどれほどよかったでしょう",
+      "cards-meta": "Expression / Reading / Pitch / Frequency / Tags → AnkiConnect",
       "paired-title": "日中対訳レイアウト",
       "paired-sub": "日本語行＋中国語行＋グループ間の空行",
       "pair-1": "夢ならばどれほどよかったでしょう",
@@ -172,6 +247,16 @@
     en: {
       "hiragana-title": "Lyric furigana",
       "hiragana-sub": "Shared engine: contextual readings, okurigana outside ruby",
+      "clean-title": "HTML cleaning before/after",
+      "clean-sub": "Local preprocess: keep lyrics, drop ads and page noise",
+      "clean-before": "Before (pasted HTML)",
+      "clean-after": "After (lyrics)",
+      "romaji-title": "Lyrics in romaji (--romaji)",
+      "romaji-sub": "Every kana rendered in Hepburn romaji",
+      "cards-title": "Mining cards (build_cards)",
+      "cards-sub": "Lyric line → reading/pitch/frequency → Anki TSV / payload",
+      "cards-example": "If this were a dream, how wonderful it would be",
+      "cards-meta": "Expression / Reading / Pitch / Frequency / Tags → AnkiConnect",
       "paired-title": "Paired translation layout",
       "paired-sub": "Japanese line + Chinese line + blank line between groups",
       "pair-1": "If this were a dream, how wonderful it would be",
