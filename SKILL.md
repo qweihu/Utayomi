@@ -16,7 +16,7 @@ description: 日语歌词注音与中译对照工具。输入日语歌词文本�
 ## 运行时选择
 
 不要直接使用裸的 `python` 或 `python3` 运行注音脚本：它们可能没有安装共享引擎及其词典依赖。
-运行前先查找当前工作区的 `.venv/bin/python`；如果工作区就是 Bunomi，则优先使用：
+运行前先查找当前工作区或项目内的 `.venv/bin/python`；本地联调共享引擎时优先使用带共享依赖的虚拟环境：
 
 ```bash
 PYTHONPATH=/path/to/japanese-language-core/src /path/to/python \

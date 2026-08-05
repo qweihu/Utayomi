@@ -18,12 +18,7 @@ def candidate_interpreters() -> list[Path]:
     configured = os.environ.get("UTAYOMI_PYTHON")
     if configured:
         candidates.append(Path(configured).expanduser())
-    candidates.extend(
-        [
-            PROJECT_ROOT / ".venv" / "bin" / "python",
-            PROJECT_ROOT.parent / "Bunomi" / ".venv" / "bin" / "python",
-        ]
-    )
+    candidates.append(PROJECT_ROOT / ".venv" / "bin" / "python")
     system_python = shutil.which("python3")
     if system_python:
         candidates.append(Path(system_python))
