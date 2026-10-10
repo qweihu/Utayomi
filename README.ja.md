@@ -123,9 +123,15 @@ python3 -m venv .venv
 
 `requirements.txt` は `japanese-language-core[reading]` を固定バージョンで参照します。
 
-Utayomi に Uta CLI は含まれません。歌名検索には、Agent の実行環境に
-`furigana-lyrics` が別途インストールされ、ネットワークへ接続できる必要があります。
-歌詞を貼り付けて処理する場合は CLI は不要です。
+Utayomi に Uta CLI は含まれません。歌名検索を使う場合は、[Uta Desktop の最新リリース](https://github.com/qweihu/furigana-lyrics-desktop/releases/latest)
+から Core と Uta の wheel を同じフォルダにダウンロードし、Agent が使う Python 環境に
+両方インストールします。
+
+```bash
+python -m pip install ./japanese_language_core-*.whl ./furigana_lyrics-*.whl
+```
+
+検索にはネットワーク接続が必要です。貼り付けた歌詞の処理に CLI は必要ありません。
 
 ## 検証
 

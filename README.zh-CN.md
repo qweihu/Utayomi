@@ -84,7 +84,15 @@ python3 -m venv .venv
 .venv/bin/python scripts/install_utayomi_skill.py
 ```
 
-共享核心负责通用日语读音和翻译结构校验；Uta 提供歌词搜索与获取；Utayomi 负责 Agent 侧确认、歌词处理和页面输出。Utayomi 不内置 Uta CLI：只有在 Agent 的运行环境中另行安装 `furigana-lyrics` 并能访问网络时，歌名搜索才可用。即使没有 CLI，用户粘贴的歌词仍可正常处理。
+共享核心负责通用日语读音和翻译结构校验；Uta 提供歌词搜索与获取；Utayomi 负责 Agent 侧确认、歌词处理和页面输出。Utayomi 不内置 Uta CLI。
+
+要使用歌名搜索，请从 [Uta Desktop 最新 Release](https://github.com/qweihu/furigana-lyrics-desktop/releases/latest) 下载匹配的 Core 与 Uta wheel，放到同一目录，再安装到 Agent 使用的 Python 环境：
+
+```bash
+python3 -m pip install ./japanese_language_core-*.whl ./furigana_lyrics-*.whl
+```
+
+搜索需要网络连接；即使不安装 CLI，粘贴歌词仍可正常处理。
 
 ## 不做什么
 

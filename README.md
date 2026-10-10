@@ -161,9 +161,17 @@ python3 -m venv .venv
 `requirements.txt` pins `japanese-language-core[reading]` at a fixed version.
 When the shared package is installed, `PYTHONPATH` can be omitted.
 
-Utayomi does not bundle the Uta CLI. Title search works only when
-`furigana-lyrics` is separately installed in the Agent's execution environment
-and can access the network. Pasted lyrics still work without it.
+Utayomi does not bundle the Uta CLI. For title/artist search, download the
+matching `japanese-language-core` and `furigana-lyrics` wheels from the
+[latest Uta Desktop release]
+(https://github.com/qweihu/furigana-lyrics-desktop/releases/latest) and install both
+into the Python environment used by your Agent:
+
+```bash
+python -m pip install ./japanese_language_core-*.whl ./furigana_lyrics-*.whl
+```
+
+Search needs network access. Pasted lyrics still work without the CLI.
 
 ## Verification
 
