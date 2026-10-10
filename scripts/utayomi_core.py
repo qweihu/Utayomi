@@ -1,24 +1,10 @@
-#!/usr/bin/env python3
-"""
-Utayomi - 日语歌词注音工具
+"""Internal shared-engine adapter used by the unified Utayomi entry point."""
 
-用法：
-    # 从标准输入注音
-    echo "歌词文本" | .venv/bin/python scripts/utayomi_core.py
-    
-    # 从文件注音
-    .venv/bin/python scripts/utayomi_core.py < lyrics.txt
-    
-    # 罗马音模式
-    .venv/bin/python scripts/utayomi_core.py --romaji < lyrics.txt
-"""
-import sys
-import re
-import argparse
 import html
+import re
 
 
-KANA_RUN_RE = re.compile(r"[ぁ-ゖァ-ヺヽヾー]+")
+RUBY_BLOCK_RE = re.compile(r"<ruby>.*?</ruby>")
 
 
 class SharedEngineUnavailableError(RuntimeError):
@@ -35,67 +21,33 @@ def _ruby(surface, reading):
     return f"<ruby>{_escape(surface)}<rt>{_escape(reading)}</rt></ruby>"
 
 
-def _render_shared_hiragana(token):
+def _render_shared_hiragana(token, align_reading):
     surface = token.orig
     reading = token.hira
     if not has_kanji(surface) or not reading:
         return _escape(surface)
-
-    kana_runs = list(KANA_RUN_RE.finditer(surface))
-    if not kana_runs:
-        return _ruby(surface, reading)
-
-    pieces = []
-    surface_cursor = 0
-    reading_cursor = 0
-    for kana_match in kana_runs:
-        before = surface[surface_cursor:kana_match.start()]
-        if before:
-            if has_kanji(before):
-                kana_hint = kana_match.group(0)
-                reading_index = reading.find(kana_hint, reading_cursor)
-                while reading_index >= 0 and reading_index <= reading_cursor:
-                    reading_index = reading.find(kana_hint, reading_index + 1)
-                if reading_index < 0:
-                    return _ruby(surface, reading)
-                pieces.append(_ruby(before, reading[reading_cursor:reading_index]))
-                reading_cursor = reading_index
-            else:
-                pieces.append(_escape(before))
-
-        kana_text = kana_match.group(0)
-        pieces.append(_escape(kana_text))
-        if reading.startswith(kana_text, reading_cursor):
-            reading_cursor += len(kana_text)
-        else:
-            reading_index = reading.find(kana_text, reading_cursor)
-            if reading_index < 0:
-                return _ruby(surface, reading)
-            reading_cursor = reading_index + len(kana_text)
-        surface_cursor = kana_match.end()
-
-    after = surface[surface_cursor:]
-    if after:
-        if has_kanji(after):
-            if reading_cursor >= len(reading):
-                return _ruby(surface, reading)
-            pieces.append(_ruby(after, reading[reading_cursor:]))
-        else:
-            pieces.append(_escape(after))
-    return "".join(pieces) if pieces else _ruby(surface, reading)
+    parts = align_reading(surface, reading)
+    if any(has_kanji(part) and not part_reading for part, part_reading in parts):
+        parts = [(surface, reading)]
+    return "".join(
+        _ruby(part, part_reading)
+        if part_reading and has_kanji(part)
+        else _escape(part)
+        for part, part_reading in parts
+    )
 
 
-def _render_shared_token(token, mode):
+def _render_shared_token(token, mode, align_reading):
     if mode == "romaji":
         if has_japanese(token.orig) and token.hepburn:
             return _ruby(token.orig, token.hepburn)
         return _escape(token.orig)
-    return _render_shared_hiragana(token)
+    return _render_shared_hiragana(token, align_reading)
 
 
-def _convert_with_shared_engine(text, mode, engine_name='auto'):
+def _convert_with_shared_engine(text, mode):
     try:
-        from japanese_language_core.reading import create_engine
+        from japanese_language_core.reading import align_reading, create_engine
     except ImportError as exc:
         raise SharedEngineUnavailableError(
             "未找到 japanese_language_core.reading；请安装 japanese-language-core 或设置 "
@@ -103,7 +55,7 @@ def _convert_with_shared_engine(text, mode, engine_name='auto'):
         ) from exc
 
     try:
-        engine = create_engine(engine_name)
+        engine = create_engine("auto")
     except Exception as exc:
         raise SharedEngineUnavailableError(f"共享日语读音引擎不可用: {exc}") from exc
     try:
@@ -112,7 +64,30 @@ def _convert_with_shared_engine(text, mode, engine_name='auto'):
         raise RuntimeError(f"共享日语读音引擎处理失败: {exc}") from exc
     if "".join(token.orig for token in tokens) != text:
         raise RuntimeError("共享引擎没有保留歌词原文")
-    return "".join(_render_shared_token(token, mode) for token in tokens), getattr(engine, "name", "shared")
+    reading_attr = "hepburn" if mode == "romaji" else "hira"
+    missing = [
+        token.orig for token in tokens
+        if has_kanji(token.orig) and not getattr(token, reading_attr)
+    ]
+    if missing:
+        raise RuntimeError(f"共享引擎没有提供汉字读音: {missing[0]}")
+
+    rendered = "".join(
+        _render_shared_token(token, mode, align_reading) for token in tokens
+    )
+    visible = html.unescape(
+        re.sub(r"</?ruby>|<rt>.*?</rt>", "", rendered)
+    )
+    if visible != text:
+        raise RuntimeError("Ruby 标注改变了歌词原文")
+    unannotated = RUBY_BLOCK_RE.sub("", rendered)
+    if has_kanji(html.unescape(unannotated)):
+        raise RuntimeError("歌词中仍有未注音的汉字")
+    if rendered.count("<ruby>") != rendered.count("</ruby>") or rendered.count(
+        "<rt>"
+    ) != rendered.count("</rt>"):
+        raise RuntimeError("Ruby 标注标签不完整")
+    return rendered
 
 
 def has_kanji(text):
@@ -125,88 +100,13 @@ def has_japanese(text):
     return bool(re.search(r'[\u4e00-\u9faf\u3040-\u309f\u30a0-\u30ff]', text))
 
 
-def convert_to_ruby_with_engine(text, mode='hiragana', engine='auto'):
-    """Annotate with the shared engine when available.
+def convert_to_ruby(text, mode='hiragana'):
+    """Annotate with the shared reading engine.
 
-    ``auto`` prefers ``japanese_language_core.reading`` and falls back to the original
-    PyKakasi engine inside the shared package.
-    ``shared`` is strict and is used by the cross-project contract tests.
+    Engine selection belongs to ``japanese-language-core``. Utayomi exposes
+    only the reading mode because callers should not need to choose a backend.
     """
 
-    if engine not in {'auto', 'shared', 'legacy'}:
-        raise ValueError("engine must be 'auto', 'shared', or 'legacy'")
-    if engine == 'legacy':
-        return _convert_with_shared_engine(text, mode, 'pykakasi')[0], 'legacy'
-    try:
-        return _convert_with_shared_engine(text, mode, 'auto')
-    except SharedEngineUnavailableError:
-        if engine == 'shared':
-            raise
-        raise SharedEngineUnavailableError(
-            "japanese_language_core.reading 不可用；请安装 japanese-language-core[reading]"
-        )
-
-
-def convert_to_ruby(text, mode='hiragana', engine='auto'):
-    """Return annotated text while preserving the historical API."""
-
-    return convert_to_ruby_with_engine(text, mode=mode, engine=engine)[0]
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description='Utayomi - 日语歌词注音工具',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='''
-示例：
-  echo "夢ならばどれほどよかったでしょう" | .venv/bin/python scripts/utayomi_core.py
-  cat lyrics.txt | .venv/bin/python scripts/utayomi_core.py --romaji
-        '''
-    )
-    
-    parser.add_argument(
-        '--romaji', '-r',
-        action='store_true',
-        help='使用罗马音标注（默认使用平假名）'
-    )
-    parser.add_argument(
-        '--engine',
-        choices=('auto', 'shared', 'legacy'),
-        default='auto',
-        help='读音引擎：auto 优先共享 japanese_language_core.reading，legacy 使用旧版 Fugashi/PyKakasi',
-    )
-    
-    args = parser.parse_args()
-    
-    # 从标准输入读取；仅用 strip 判断空输入，不改写用户原文。
-    input_content = sys.stdin.read()
-    
-    if not input_content.strip():
-        print("Error: 没有输入内容。请通过管道传入文本。", file=sys.stderr)
-        print("用法: echo '歌词' | .venv/bin/python scripts/utayomi_core.py", file=sys.stderr)
-        sys.exit(1)
-    
-    # 转换注音
-    mode = 'romaji' if args.romaji else 'hiragana'
-    try:
-        ruby_text, selected_engine = convert_to_ruby_with_engine(
-            input_content,
-            mode=mode,
-            engine=args.engine,
-        )
-    except (RuntimeError, ValueError) as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        sys.exit(2)
-    
-    if args.engine == 'auto' and selected_engine == 'legacy':
-        print(
-            "Warning: japanese_language_core.reading 不可用，已回退 legacy；请安装 japanese-language-core 并使用 --engine shared。",
-            file=sys.stderr,
-        )
-
-    # 输出结果，不额外添加换行，保持输入的首尾换行结构。
-    sys.stdout.write(ruby_text)
-
-
-if __name__ == "__main__":
-    main()
+    if mode not in {"hiragana", "romaji"}:
+        raise ValueError(f"不支持的注音模式: {mode}")
+    return _convert_with_shared_engine(text, mode)

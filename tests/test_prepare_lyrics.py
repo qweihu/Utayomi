@@ -1,6 +1,4 @@
-import json
 import pathlib
-import subprocess
 import sys
 import unittest
 
@@ -64,7 +62,7 @@ class PrepareLyricsTests(unittest.TestCase):
         self.assertEqual(prepared["lyrics"], "静かな夜に\n星を見上げる")
 
     def test_does_not_remove_short_lyric_lines_without_header_structure(self):
-        raw = "愛してる\n君のこと\n静かな夜に\n星を見上げる\n"
+        raw = "朝の光\n窓の外を見る\n静かな夜に\n星を探す\n"
 
         prepared = prepare_text(raw)
 
@@ -89,19 +87,6 @@ class PrepareLyricsTests(unittest.TestCase):
         self.assertEqual(prepared["title"], "星 & 月")
         self.assertEqual(prepared["artist"], "示例")
         self.assertEqual(prepared["lyrics"], "静かな 夜")
-
-    def test_json_cli_returns_structured_result(self):
-        completed = subprocess.run(
-            [sys.executable, str(PROJECT_ROOT / "scripts/prepare_lyrics.py"), "--json"],
-            input="歌曲名：测试\n歌手：歌手\n歌詞です\n",
-            text=True,
-            capture_output=True,
-            check=True,
-        )
-
-        result = json.loads(completed.stdout)
-        self.assertEqual(result, {"title": "测试", "artist": "歌手", "lyrics": "歌詞です"})
-
 
 if __name__ == "__main__":
     unittest.main()

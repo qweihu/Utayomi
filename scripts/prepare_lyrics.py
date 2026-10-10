@@ -5,16 +5,11 @@ This module deliberately has no network capability. It accepts either plain
 text or pasted HTML, removes markup-only noise, and conservatively extracts
 song metadata from labels or strong header structure.
 
-Examples:
-    cat pasted-lyrics.txt | .venv/bin/python scripts/prepare_lyrics.py
-    cat pasted-lyrics.txt | .venv/bin/python scripts/prepare_lyrics.py --json
+The unified ``utayomi.py`` entry point calls ``prepare_text`` directly.
 """
 
-import argparse
 import html
-import json
 import re
-import sys
 from html.parser import HTMLParser
 
 
@@ -62,6 +57,11 @@ RUBY_ANNOTATION_TAGS = {"rp", "rt"}
 
 TITLE_LABELS = r"歌曲名称|歌曲名|歌名|曲名|标题|song\s*title|title|song"
 ARTIST_LABELS = r"歌手名称|歌手名|歌手|演唱者|艺术家|artist|アーティスト"
+_LRC_TIME_TAG = re.compile(r"\[\d{1,3}:\d{2}(?:[.:]\d{1,3})?\]")
+_LRC_METADATA = re.compile(
+    r"^\[(ti|title|ar|artist|al|album|by|offset|re|ve):([^\]]*)\]$",
+    re.IGNORECASE,
+)
 COMBINED_SEPARATOR = r"\s*(?:/|／|\\|｜|·|•| - | – | — )\s*"
 HEADER_MAX_LENGTH = 40
 ARTIST_MAX_LENGTH = 24
@@ -262,8 +262,24 @@ def prepare_text(raw_text, header_lines=None):
     title = None
     artist = None
     metadata_indexes = set()
+    has_lrc = False
 
     for index, line in enumerate(lines):
+        lrc_metadata = _LRC_METADATA.fullmatch(line.strip())
+        if lrc_metadata:
+            has_lrc = True
+            key, value = lrc_metadata.groups()
+            if key.casefold() in {"ti", "title"}:
+                title = title or value.strip()
+            elif key.casefold() in {"ar", "artist"}:
+                artist = artist or value.strip()
+            metadata_indexes.add(index)
+            continue
+        if _LRC_TIME_TAG.search(line):
+            has_lrc = True
+            lines[index] = _LRC_TIME_TAG.sub("", line).strip()
+        if index in metadata_indexes:
+            continue
         title_match = _label_match(line, TITLE_LABELS)
         artist_match = _label_match(line, ARTIST_LABELS)
         if title_match and title_match.group(1):
@@ -280,7 +296,7 @@ def prepare_text(raw_text, header_lines=None):
             title = title or lines[title_index].strip()
             artist = artist or lines[artist_index].strip()
             metadata_indexes.update({title_index, artist_index})
-        elif header_lines is None:
+        elif header_lines is None and not has_lrc:
             auto_indexes = _auto_header_indexes(lines, raw_text)
             if auto_indexes:
                 title_index, artist_index = auto_indexes
@@ -306,37 +322,3 @@ def prepare_text(raw_text, header_lines=None):
         line for index, line in enumerate(lines) if index not in metadata_indexes
     ).strip()
     return {"title": title, "artist": artist, "lyrics": lyrics}
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Clean pasted lyric text locally and extract metadata."
-    )
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="输出歌曲名、歌手和清洗后的歌词 JSON",
-    )
-    parser.add_argument(
-        "--header-lines",
-        type=int,
-        choices=(0, 2),
-        default=None,
-        help="2=强制将前两个非空行按‘歌名、歌手’处理；0=关闭自动判断",
-    )
-    args = parser.parse_args()
-
-    raw_text = sys.stdin.read()
-    if not raw_text.strip():
-        print("Error: 没有输入内容。请通过管道传入用户粘贴的文本。", file=sys.stderr)
-        sys.exit(1)
-
-    prepared = prepare_text(raw_text, header_lines=args.header_lines)
-    if args.json:
-        print(json.dumps(prepared, ensure_ascii=False, indent=2))
-    else:
-        print(prepared["lyrics"])
-
-
-if __name__ == "__main__":
-    main()

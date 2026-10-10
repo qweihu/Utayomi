@@ -27,7 +27,11 @@ def candidate_interpreters() -> list[Path]:
 
 def has_runtime_dependencies(candidate: Path) -> bool:
     probe = subprocess.run(
-        [str(candidate), "-c", "import fugashi, pykakasi"],
+        [
+            str(candidate),
+            "-c",
+            "from sudachipy import dictionary; dictionary.Dictionary()",
+        ],
         capture_output=True,
         text=True,
     )
