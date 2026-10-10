@@ -2,7 +2,7 @@
 
 当用户提供日语歌词或歌词 HTML，并要求清洗、注音、翻译或排版时使用本技能。
 
-- 用户提供歌词时只处理该文本，不联网。用户按歌名/歌手请求歌词或明确要求搜索时，调用已安装的 Uta CLI，不直接访问歌词网站：
+- 用户提供歌词时只处理该文本，不联网。用户按歌名/歌手请求歌词或明确要求搜索时，调用已安装的 `furigana-lyrics` CLI，不直接访问歌词网站：
   1. 用 argv `["furigana-lyrics", "lyrics", "search", "--query", query, "--limit", "5"]` 调用搜索，把完整查询作为一个参数传入，不要拼接 shell 命令。向用户展示歌曲名、歌手、专辑、来源和是否有时间轴。
   2. 若候选有歧义，先让用户选择。仅把所选候选的完整 JSON 传给 `furigana-lyrics lyrics fetch --candidate-json -` 的标准输入。
   3. 将 fetch 返回的 `plain_lyrics` 与 `track_name`、`artist_name`、`source_name` 分别作为 `text`、`title`、`artist`、`source` 传给 Agent JSON 的 `prepare` 请求。不要把元数据拼进歌词正文。

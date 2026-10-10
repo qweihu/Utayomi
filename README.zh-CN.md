@@ -4,7 +4,7 @@
 
 Utayomi 适合处理用户已经提供的歌词文本或歌词 HTML。它会清理网页复制带来的标签和噪音，添加注音，逐行翻译，并默认生成可以直接打开的 HTML 歌词页。
 
-粘贴歌词时只在本地处理。你明确要求按歌名或歌手找歌词时，Utayomi 可调用 Uta 的搜索服务；候选有歧义时会先让你选择。
+粘贴歌词时只在本地处理。你明确要求按歌名或歌手找歌词时，Utayomi 可通过可选的 `furigana-lyrics` CLI 搜索；候选有歧义时会先让你选择。
 
 ## 你可以怎么用
 
@@ -37,7 +37,7 @@ Utayomi 适合处理用户已经提供的歌词文本或歌词 HTML。它会清�
 
 ## 默认会做什么
 
-- 粘贴歌词时只处理你提供的文本，不访问歌词网站；明确要求搜索时才调用 Uta CLI；
+- 粘贴歌词时只处理你提供的文本，不访问歌词网站；明确要求搜索时才调用可选的 `furigana-lyrics` CLI；
 - 清理 HTML、脚本、菜单和广告等网页噪音；
 - 保留歌词换行、重复副歌、括号、和声标记和有意义的短句；
 - 默认使用平假名注音并自动翻译；
@@ -84,9 +84,9 @@ python3 -m venv .venv
 .venv/bin/python scripts/install_utayomi_skill.py
 ```
 
-共享核心负责通用日语读音和翻译结构校验；Uta 提供歌词搜索与获取；Utayomi 负责 Agent 侧确认、歌词处理和页面输出。Utayomi 不内置 Uta CLI。
+共享核心负责通用日语读音和翻译结构校验；可选的 `furigana-lyrics` CLI 负责搜索与获取；Utayomi 负责 Agent 侧确认、歌词处理和页面输出。Utayomi 不内置搜索 CLI。
 
-要使用歌名搜索，请从 [Uta Desktop 最新 Release](https://github.com/qweihu/furigana-lyrics-desktop/releases/latest) 下载匹配的 Core 与 Uta wheel，放到同一目录，再安装到 Agent 使用的 Python 环境：
+要使用歌名搜索，请在 Agent 使用的 Python 环境中安装匹配的 Core 与 `furigana-lyrics` CLI wheel。CLI 单独分发，不安装 CLI 时仍可处理你粘贴的歌词：
 
 ```bash
 python3 -m pip install ./japanese_language_core-*.whl ./furigana_lyrics-*.whl
@@ -96,7 +96,7 @@ python3 -m pip install ./japanese_language_core-*.whl ./furigana_lyrics-*.whl
 
 ## 不做什么
 
-- 不会自动搜索；按歌名/歌手明确请求时通过 Uta CLI 搜索，并在候选有歧义时先让你选择；
+- 不会自动搜索；按歌名/歌手明确请求时通过可选 CLI 搜索，并在候选有歧义时先让你选择；
 - 不生成 Anki 卡片、挖句数据或多套特殊布局；
 - 不生成 PNG 或其他预览图片；
 - 不把模型翻译伪装成词典释义；
