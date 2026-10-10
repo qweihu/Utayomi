@@ -1,0 +1,4 @@
+interface:
+  display_name: "Utayomi 日语歌词"
+  short_description: "按需搜索或处理日语歌词，添加注音与翻译并生成 HTML"
+  default_prompt: "Use $utayomi for user-provided Japanese lyrics or title/artist lyric searches on request; add validated hiragana, translate or polish in the user's language, and return HTML with source attribution."

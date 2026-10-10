@@ -1,7 +1,7 @@
 {
   "name": "utayomi",
   "version": "1.1.0",
-  "description": "一个给用户提供的日语歌词标注汉字读音和中文翻译的 skill，支持 HTML 清洗和罗马音模式",
+  "description": "给 Agent 使用的日语歌词清洗、注音与语境翻译 Skill，默认生成独立 HTML",
   "main": "SKILL.md",
   "files": [
     "SKILL.md",
