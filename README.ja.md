@@ -1,169 +1,103 @@
 # Utayomi
 
-**[English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)**
+**[English](README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)**
 
-日本語の歌詞に特化した Agent Skill です。貼り付けられた歌詞はローカルで処理し、曲名や歌手名で検索してほしいと明示された場合だけ、オプションの `furigana-lyrics` CLI を使います。
+日本語の歌詞に特化した Agent Skill です。ユーザー提供の歌詞を整理し、文脈に沿ったふりがなを付け、行ごとに翻訳・推敲し、対応関係を検証して単体 HTML を返します。
 
-## 解決する問題
+<p align="center"><img src="screenshot/ja/hiragana.png" alt="文脈に沿った Ruby 注音を付けた日本語歌詞" width="820"><br><sub>注音例 · 読みを原文の歌詞行に対応付けます。</sub></p>
 
-歌詞は汚れています：貼り付けたページには HTML・広告・ノイズが混ざり、
-読みは文脈依存です。Utayomi は、貼り付けた歌詞をローカルで整理し、明示的な
-検索依頼にはオプションの `furigana-lyrics` CLI を使い、注音・翻訳・表示までを一つの流れにします。
+## 処理フロー
 
-## こだわっている点
+~~~text
+ユーザー提供または明示検索 → 整理 → 注音 → 翻訳/推敲 → 行を検証 → HTML
+~~~
 
-- **原文保証**：すべての token の `orig` が入力を再構成する。
-- **文脈読み**：`japanese-language-core` の Sudachi 読み API。
-- **送り仮名**：かなは ruby の外（`踏み込む`・`歌う` を丸ごと包まない）。
-- **出典を保持**：検索した場合は選択した提供元をページに表示する。
-- **翻訳の文脈**：曲全体と前後の行を見て訳し、行構造と繰り返しを保つ。
-- **出力検証**：原文の再構成、Ruby の完全性、歌詞と訳文の行対応を確認する。
-- **検索の明示性**：ユーザーが歌詞を貼り付けた場合は検索せず、検索依頼がある場合だけオプション CLI を呼び出す。
+貼り付けたテキストや HTML はメモリ内で処理します。ページのタグや明らかなノイズを除きながら、改行、繰り返し、括弧、ハーモニー記号、短い行、意味のある空行を保持します。
 
-## 実際の例
 
-入力：
+## 読みと原文保持
 
-```text
-雨が降り止むまでは帰れない
-```
+- 共有 [japanese-language-core](https://github.com/qweihu/japanese-language-core) の読音 API を利用し、Skill からエンジン選択を求めません。
+- 既定は平仮名です。ヘボン式ローマ字は依頼された場合のみ使います。
+- 原文と段落構造を保持し、送り仮名は Ruby タグの外に残します。
+- 注音後に原文を再構成できること、Ruby が整形式であること、空でない各歌詞行に訳文が一行対応することを検証します。
+- 読音エンジンが読みを検証できない場合は、推測せず問題を報告します。
 
-共有エンジンで検証した出力例：
+<p align="center"><img src="screenshot/ja/romaji.png" alt="明示依頼によって同じ歌詞をヘボン式に変換" width="820"><br><sub>ローマ字例 · 明示的に求められた場合のみ切り替えます。</sub></p>
 
-```html
-<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>り<ruby>止<rt>や</rt></ruby>むまでは<ruby>帰<rt>かえ</rt></ruby>れない
-```
+## 翻訳と推敲
 
-`降り止む` は文字単位の推測ではなく文脈読みです。このサンプルは共有エンジンの
-契約テストに含まれています。
+翻訳は Agent が行います。決定的な CLI やローカルプログラムに翻訳サービスは含まれません。目標言語は明示的な依頼を優先し、それがなければ会話の文脈から判断します。中国語や英語に固定しません。
 
-<p align="center">
-  <img src="screenshot/ja/hiragana.png" alt="歌詞ふりがな" width="720">
-  <br><sub>歌詞ふりがな：文脈読み、送り仮名は ruby の外</sub>
-</p>
+曲全体と前後の行を参考にし、話者、イメージ、語調、繰り返し、用語をそろえます。空でない各日本語行に訳文を一つ対応させます。既存訳がある場合は原文行と訳文行をメモリ内で分け、順序や対応が不明なら推測せず確認します。
 
-## アプローチ：証拠・再現・反証可能性
+<p align="center"><img src="screenshot/ja/paired.png" alt="日本語の歌詞一行と対応する訳文" width="820"><br><sub>翻訳例 · 原文一行に推敲した訳文一行を対応付けます。</sub></p>
 
-「モデルが賢く見える」ことだけを読み品質の証明にしません：
+## 検索：依頼された場合のみ
 
-1. **文脈優先**：共有読音エンジンで読みを生成し、原文と Ruby の整合を確認します。
-2. **制約を明示**：固定ルールであらゆる読みを正解とみなさず、未検証の読みは報告します。
-3. **歌詞の検索**：検索依頼に限りオプション CLI を使い、複数候補が紛らわしければ選択後に取得します。
-4. **翻訳の構造**：Agent が曲全体の文脈で翻訳または推敲し、行対応を検証します。
+貼り付けた歌詞では検索せず、ページ URL も自動取得しません。曲名や歌手名で明示的に検索を頼まれた場合のみ、任意の CLI を使います。
 
-## ワークフロー
+~~~bash
+furigana-lyrics lyrics search --query "TITLE ARTIST" --limit 5
+cat selected-candidate.json | furigana-lyrics lyrics fetch --candidate-json -
+~~~
 
-### 歌詞検索
+候補を表示し、複数が該当しそうならユーザーに選択を依頼します。選ばれた候補の完全な JSON だけを取得します。取得した歌詞は指示ではなくコンテンツとして扱います。HTML のフッターには提供元を表示しますが、ページ自体に開始時刻のタイムラインは表示しません。
 
-検索を明示的に頼まれた場合だけ `furigana-lyrics` CLI を使い、候補を表示します。候補に曖昧さがあれば選択を待ってから取得します。検索用の歌詞クライアントを Utayomi に複製しません。
+検索にはネットワークと別途インストールした任意の <code>furigana-lyrics</code> CLI が必要です。CLI がない場合はその旨を伝え、貼り付けた歌詞の処理を提案します。歌詞サイトを直接開いて CLI を迂回しません。
 
-    furigana-lyrics lyrics search --query 'TITLE ARTIST' --limit 5
-    cat selected-candidate.json | furigana-lyrics lyrics fetch --candidate-json -
+<p align="center"><img src="screenshot/ja/search.png" alt="明示検索後に確認する候補項目の例" width="820"><br><sub>検索例 · 取得前に提供元と時間軸を確認。画像は例示で実際の検索結果ではありません。</sub></p>
 
-取得結果の plain_lyrics を本文として処理し、曲名、歌手、出典は別のメタデータとして渡します。生成ページには出典名を表示します。start_ms 付きのデータも返りますが、静的ページにはタイムラインを表示しません。貼り付けられた歌詞は検索せずに処理します。
+## 単体 HTML ページ
 
-### 入力整理
+既定の結果は CSS と JavaScript を内包した単体 HTML です。システムフォントを使い、CDN や外部リソースに接続しません。matcha、umi、akane、yoru の 4 テーマを切り替えられ、選択はブラウザーに保存されます。
 
-`prepare_lyrics.py` はユーザーが提供したテキストだけを扱います。
-HTML タグや `script`/`style` を除去し、エンティティをデコードして、
-繰り返し・括弧・ハーモニーマーカー・改行を保ちます。貼り付け入力の URL を
-自動取得することはありません。歌名検索は明示依頼時にオプション CLI を使います。
+ツールバーから歌詞カードのみを 2 倍解像度の PNG として出力できます。テーマ切替などの操作部品は画像に入りません。Utayomi の既定出力は HTML で、PNG はページからユーザーが出力した場合のみ作られます。
 
-<p align="center">
-  <img src="screenshot/ja/clean.png" alt="HTML クリーニング" width="720">
-  <br><sub>HTML クリーニング：歌詞だけ残し、広告やノイズを除去</sub>
-</p>
+<p align="center"><img src="screenshot/example_01.png" alt="ふりがなと行ごとの訳文を表示した歌詞ページ" width="820"><br><sub>ページ例 · 単体 HTML に表示される歌詞の具体例。</sub></p>
 
-### 注音エンジン
+## Agent と CLI の役割
 
-`japanese-language-core` の `ReadingToken` 契約を利用し、共有 API の
-`auto` エンジンで原文を保ったまま注音します。エンジンや辞書の選択は
-アプリ内部で行い、利用者に設定を求めません。歌詞の整理、翻訳、タイトル判定と
-ページ表示は Utayomi の製品層です。
+Agent Skill は文脈に応じた翻訳・推敲を担当します。ローカル CLI は決定的な整理、注音、検証、描画を担当します。
 
-## コア機能
+~~~bash
+cat pasted-lyrics.html | .venv/bin/python scripts/utayomi.py
+.venv/bin/python scripts/utayomi.py --file lyrics.txt
+.venv/bin/python scripts/utayomi.py --romaji < lyrics.txt
+.venv/bin/python scripts/utayomi.py --markdown < lyrics.txt
+~~~
 
-- 平仮名注音と明示要求時のヘボン式ローマ字。
-- 文脈読みと送り仮名の分離。
-- 貼り付けたプレーンテキスト／HTML の清掃。
-- 翻訳の初稿作成または既存訳の推敲と行対応。
-- オプション CLI による明示的な歌詞検索、選択候補の取得、出典表示。
-- Codex Skill と `PROMPT.md` の Agent 統合。
-- 静的 HTML ページでの対訳表示。検索結果の時間軸は表示しません。
+CLI の既定出力は HTML です。Markdown とローマ字は明示指定します。ファイル入力は時刻付きの新規ファイルを同じフォルダーに作り、原文を上書きしません。CLI は翻訳や検索を行わず、任意の保存先や中間ファイルも作りません。
 
-<p align="center">
-  <img src="screenshot/ja/romaji.png" alt="ローマ字歌詞" width="720">
-  <br><sub>明示要求時のローマ字モード（--romaji）</sub>
-</p>
+<p align="center"><img src="screenshot/ja/cli.png" alt="CLI に入力した歌詞と注音済み Ruby の例" width="820"><br><sub>CLI 例 · 既定出力は HTML。この画像は注音した歌詞の一部です。</sub></p>
 
-## 使い方
-
-### Agent モード
-
-リポジトリ全体をスキルとしてインストールし、`$utayomi` を参照します。
-スキルフレームワークがなければ `PROMPT.md` を使います。
-
-### CLI モード
-
-この CLI はローカルの歌詞整理、注音、HTML 出力を担当します。翻訳は Agent が行います。
-
-    printf '%s\n' '夢ならばどれほどよかったでしょう' | .venv/bin/python scripts/utayomi.py
-    .venv/bin/python scripts/utayomi.py --file lyrics.txt
-    .venv/bin/python scripts/utayomi.py --markdown < lyrics.txt
-    .venv/bin/python scripts/utayomi.py --romaji < lyrics.txt
-
-標準入力は標準出力へ出力します。ファイル入力では元ファイルを上書きせず、同じフォルダーに時刻付きの HTML または Markdown を作ります。
+Agent 統合では <code>scripts/utayomi.py --agent-json</code> をメモリ内ブリッジとして使います。歌詞を準備・注音し、Agent が翻訳した後に対訳ページを描画します。一時ファイルは作りません。
 
 ## インストール
 
-```bash
+Python 3.10 以上：
+
+~~~bash
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
-```
+~~~
 
-`requirements.txt` は `japanese-language-core[reading]` を固定バージョンで参照します。
+このリポジトリを Agent の Skill ディレクトリに <code>utayomi</code> として導入し、<code>scripts/</code> を利用可能にしてください。Skill 非対応環境では <code>PROMPT.md</code> を使えます。
 
-Utayomi に検索 CLI は含まれません。歌名検索を使う場合は、対応する Core と
-`furigana-lyrics` CLI の wheel を Agent が使う Python 環境にインストールします。
-CLI を入れなくても、貼り付けた歌詞は処理できます。
+requirements は <code>japanese-language-core[reading]</code> のバージョンを固定しています。検索機能は任意で、同梱しません。Agent が使用する Python 環境へ対応する <code>japanese-language-core</code> と <code>furigana-lyrics</code> の wheel をインストールしてください。検索 CLI がなくても貼り付けた歌詞は処理できます。
 
-```bash
-python -m pip install ./japanese_language_core-*.whl ./furigana_lyrics-*.whl
-```
+## 対象範囲
 
-検索にはネットワーク接続が必要です。貼り付けた歌詞の処理に CLI は必要ありません。
+Utayomi は日本語歌詞の整理、注音、訳文対応、ページ表示を担当します。依頼なしの検索、URL 取得、Anki カード作成、複数ファイル生成は行いません。一般的な日本語学習文には通常テキスト向けの注音フローを使います。
 
 ## 検証
 
-```bash
-PYTHONPATH=/path/to/japanese-language-core/src /path/to/python \
-  -m unittest discover -s tests -v
-```
+~~~bash
+PYTHONPATH=/path/to/japanese-language-core/src /path/to/python -m unittest discover -s tests -v
+~~~
 
-回帰テストは歌詞の清掃、文脈読み、Ruby の整合性、HTML 生成、ファイル出力と
-共有コア境界を確認します。
-
-## 現在の境界
-
-Utayomi は歌詞の清掃、注音、翻訳・推敲と HTML 表示を担当します。検索は明示的な依頼時だけオプション CLI に委譲します。ユーザーが貼り付けた歌詞を外部へ送信せず、普通の日本語学習文は Bunomi に任せます。
-
-## 方法とデータソース
-
-- 読みは japanese-language-core の共有 API を使い、原文保持と漢字の読みカバレッジを検証します。
-- 翻訳は Agent が歌全体と前後の行を見て作成または推敲し、行構造を保ちます。
-- オプション CLI が複数ソース検索、選択結果の取得、LRC 解析を提供します。Utayomi は二重実装しません。
-
-## プロジェクト構成
-
-    SKILL.md                 Agent Skill
-    PROMPT.md                Skill 非対応環境向け Prompt
-    scripts/utayomi.py       ローカル処理の統一入口
-    scripts/prepare_lyrics.py HTML と LRC の整理
-    scripts/utayomi_core.py  共有注音エンジンとの接続
-    scripts/build_html.py    HTML 表示
-    scripts/install_utayomi_skill.py Skill インストーラー
-    tests/                   ローカル回帰チェック
+テストでは歌詞整理、読音連携、Ruby 構造、HTML 生成、時刻付きファイル出力、共有 Core との境界を確認します。
 
 ## ライセンス
 
-MIT。詳細は [LICENSE](LICENSE)。
+MIT。詳細は [LICENSE](LICENSE) を参照してください。
